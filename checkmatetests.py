@@ -1,50 +1,56 @@
 import connectfour as cf
 import copy
+import strategies_connect_four as scf
 
 b = cf.Board(1,2)
 
-b.add_move(3,1)
-b.add_move(1,1)
-b.add_move(1,1)
+b.add_move(3,2)
+b.add_move(2,1)
+b.add_move(4,1)
 # for i in range(2):
 #     b.add_move(2,2)
 #     
 # for i in range(2):
-b.add_move(4,2)
 b.add_move(4,1)
+b.add_move(3,1)
 b.add_move(2,1)
+
+
     
-# b.add_move(4,2)
-# 
-# b.add_move(2,1)
-# #b.add_move(2,1)
-# b.add_move(3,1)
-# b.add_move(4,1)
 
-for i in range(4):
-    b.add_move(1,2)
+for i in range(3):
+	b.add_move(2,2)
+	b.add_move(3,2)
+	b.add_move(4,2)
+
+b.add_move(2,1)
+b.add_move(3,1)
+b.add_move(4,1)
 
 print b.arr
 
-b.remove_move(1)
-b.remove_move(2)
-print b.arr
-# print b.check_open_three(1)
-# print b.accessible_open_three(1)
+print scf.better(2,1,b)
+
 # print b.open_cols
 
-# ## checkmate function tests: fail
-# print b.arr
-# newboard = copy.deepcopy(b)
-# l = [1,2,3,4,5,6]                
-# for next_move in range(7):
-#     print newboard.check_move_checkmate(next_move,2,1)
-#         
+# l = []
 
+# for col in b.open_cols:
+	
+# 	print col
+# 	b.add_move(col,2)
+# 	print b.arr
+# 	print b.check_move_win(col,1)
+# 	if b.check_move_win(col,1):
+# 		l.append(col)
+		
+# 	b.remove_move(col)
+# print l
+# for col in l:
+# 	b.open_cols.remove(col)
+# print b.open_cols
 
-#print b.check_move_checkmate(2,1,2)
-# 
+# b.add_move(5,2)
 # print b.arr
-# 
-# print len(b.indices)
+# print b.check_move_win(5,1)
 
