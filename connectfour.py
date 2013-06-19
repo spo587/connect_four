@@ -235,7 +235,7 @@ class Board(object):
             value = newboard.check_four(team1)
             newboard.remove_move(col)
             if value:
-                return col
+                return True
         return False
 
 

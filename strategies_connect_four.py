@@ -7,7 +7,7 @@ import connectfour as cf
 ##TODO: still a minor bug in surrounders function, it's 1 too high sometimes
 ## TODO: major bug in the naive strategy, not sure why
 def minimum(comp,human,board):
-    '''strategy that returns a move only to win the game or if in check'''
+    '''strategy that returns a move only to win the game or if comp is in check'''
     l = range(board.width)
     forces = []
     for col in l:
@@ -25,7 +25,7 @@ def minimum(comp,human,board):
         
     return None
 
-def better(comp,human,board):
+def better(comp,human,board, toPrint=False):
     '''returns minimum move if there is one. otherwise, eliminates moves by first
     eliminating any move that will directly result in a win for opp, then by eliminating
     any moves that could lead to a checkmate for the opp. returns single move if only one satisfies 
@@ -40,31 +40,53 @@ def better(comp,human,board):
         l = newboard.open_cols[:]  
         print l
         list_moves_to_remove = []
+        hypotheticals = [0,0,0]
         for col in l:
-
+            hypotheticals[0] = col
             newboard.add_move(col, comp)
-            # print 'newboard in strategies function,' 
-            # print newboard.arr
+            if toPrint:
+                print 'where are we in the tree?  ', hypotheticals
+                print 'hypothetical board, 1 move ahead'
+                print newboard.arr
             if newboard.check_move_win(col, human):
-                list_moves_to_remove.append(col)
-            
-                
+                list_moves_to_remove.append(col)    
             ## if not, test whether the next move by other player could be a checkmate. if so, remove it from l
             else:
+                
                 for next_move1 in newboard.open_cols:
                     newboard.add_move(next_move1,human)
+                    hypotheticals[1] = next_move1
+                    if toPrint:
+                        'where are we in the tree?', hypotheticals
+                        print 'new hypothetical board, 2 moves ahead'
+                        print newboard.arr
+                    # print 'new hypothetical board, 2 moves ahead: %s', hypotheticals
+                    # print newboard.arr
                     length = len(newboard.open_cols)
+                    if toPrint:
+                        print 'number of open columns left in the new hypothetical board', length
                     ans = 0
                     for next_move2 in newboard.open_cols:
+                        hypotheticals[2] = next_move2
                         newboard.add_move(next_move2,comp)
+                        if toPrint:
+                            print 'where are we in the tree?  ', hypotheticals
+                            print 'hypothetical board, 3 moves ahead'
+                            print newboard.arr
                         if newboard.accessible_open_three(human):
                             ans += 1
-                        if ans == l:
-                            l.remove(col)
+                            if toPrint:
+                                print 'wins for the other player on this branch:  ', ans
+                        if ans == length and col not in list_moves_to_remove:
+                            list_moves_to_remove.append(col)
                         newboard.remove_move(next_move2)
                     newboard.remove_move(next_move1)
   
-            newboard.remove_move(col) 
+            newboard.remove_move(col)
+        if toPrint:
+            print 'list of moves to remove  ', list_moves_to_remove
+            print 'original list of potential moves  ', l
+
         if len(list_moves_to_remove) > 0:
             for col in list_moves_to_remove:
                 l.remove(col)
@@ -73,7 +95,8 @@ def better(comp,human,board):
             print 'move determined by better function ', l[0]
             return l[0]
         elif len(l) == 0:
-            print '!#@$!@#%$@#^$@%&# checkmate checkmate checkmate !@#$%@#$%@$#%^'
+            print '!#@$!@#%$@#^$@%&# checkmate checkmate checkmate for team %s', human
+            print 'randomly choosing the move because there are no possible moves left to avoid defeat'
             return random.choice(board.open_cols) 
         return l
           
@@ -153,7 +176,7 @@ def play_game_1_player_comp_leads(strat=surrounders, team1=1, team2=2, board=cf.
     print 'its a draw!!!!!'
         
      
-def computer_play_computer(strat1=surrounders,strat2=surrounders,team1=1,team2=2,board=cf.Board(1,2)):
+def comp_play_comp(strat1=surrounders,strat2=surrounders,team1=1,team2=2,board=cf.Board(1,2)):
     for i in range(21):
         board.add_move(strat1(team2,team1,board),team2)
         print board.arr
@@ -170,7 +193,7 @@ def computer_play_computer(strat1=surrounders,strat2=surrounders,team1=1,team2=2
     
  
 if __name__ == '__main__': 
-    play_game_1_player_comp_leads(surrounders)           
+    comp_play_comp()           
     
     #computer_play_computer()
     
