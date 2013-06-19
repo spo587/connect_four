@@ -12,7 +12,7 @@ for j in range(6):
 #     def __init__(self, num, strat, nummoves=0):
 
 class Board(object):
-    def __init__(self, team1, team2, moves=None, indices=list(indices_default), arr=np.zeros((6,7),dtype=int), height=6, width=7):
+    def __init__(self, team1, team2, open_cols=range(7), moves=None, indices=list(indices_default), arr=np.zeros((6,7),dtype=int), height=6, width=7):
         self.arr = arr
         self.team1 = team1
         self.team2 = team2
@@ -23,6 +23,7 @@ class Board(object):
             self.moves = []
         else:
             self.moves = moves
+        self.open_cols = open_cols
 
     def surrounders(self, team, index):
         a = 0
@@ -45,9 +46,8 @@ class Board(object):
             else:
                 print local
                 break
-        print local
+
         a += min(local,4)
-        print 'a = previous a + local printed above ', a
         ## upleft
         local = 0
         for s in range(-1,-spare2-1,-1):
@@ -55,11 +55,8 @@ class Board(object):
             if self.arr[i+s,j+s] in [0,team]:
                 local += 1
             else:
-                print local
                 break
-        print local
         a += min(local,4)
-        print 'a = previous a + local printed above ', a
         ## don't count the square as its own surrounder
         ##upright
         local = 0
@@ -68,11 +65,11 @@ class Board(object):
             if self.arr[i-s,j+s] in [team,0]: 
                 local += 1
             else:
-                print local
+  
                 break
-        print local
+    
         a += min(local,4)
-        print 'a = previous a + local printed above ', a
+  
         ## downleft
         local = 0
         for s in range(0,-spare4,-1):
@@ -82,13 +79,12 @@ class Board(object):
             else:
                 print local
                 break
-        print local
+        
         a += min(local,4)
-        print 'a = previous a + local printed above ', a
+   
         ##up
         a += min(i,4)
-        print i
-        print 'a = previous a + spare rows above ', a
+
         
         ## left right
         ## right
@@ -98,11 +94,11 @@ class Board(object):
             if self.arr[i,j+s] == team or self.arr[i,j+s] == 0:
                 local += 1
             else:
-                print 'break'
+
                 break
-        print local
+
         a += min(local,4)
-        print 'a = previous a + local printed above ', a
+
         ## left
         local = 0
         for s in range(1,spare_columns_left+1):
@@ -110,11 +106,11 @@ class Board(object):
             if self.arr[i,j-s] == team or self.arr[i,j-s] == 0:
                 local += 1
             else:
-                print 'break completed'
+
                 break
-        print local
+
         a += min(local,4)
-        print 'a = previous a + local printed above ', a
+
         return a
         
         
@@ -128,26 +124,27 @@ class Board(object):
         ## first, check rows
         for r in range(self.height):
             for c in range(self.width-2):
-                if np.array_equal(self.arr[r,c:c+4],a):
+                if np.array_equal(self.arr[r,c:c+3],a):
                     if c == 0:
                         ## check to the right
                         if self.arr[r,c+5] == 0:
-                            
+                            print 'row detected'
                             list_indices.append((r,c+5))
                             
                     elif c == 4:
                         ## check to the left
                         if self.arr[r,c-1] == 0:
-                            
+                            print 'row detected'
                             list_indices.append((r,c-1))
                             
                     else:
                         ## check either side
                         if self.arr[r,c-1] == 0:
-                            
+                            print 'row detected'
                             list_indices.append((r,c-1))
                              
                         if self.arr[r,c+5] == 0:
+                            print 'row detected'
                             
                             list_indices.append((r,c+5))
                             
@@ -155,7 +152,7 @@ class Board(object):
         ## columns         
         for c in range(self.width):
             for r in range(self.height-2):
-                if np.array_equal(self.arr[r:r+4,c],a):
+                if np.array_equal(self.arr[r:r+3,c],a):
                     if r != 0: 
                         
                         list_indices.append((r-1,c))
@@ -171,7 +168,7 @@ class Board(object):
                     
                     if i >= 0:
                         if self.arr[j,j+i] == 0:
-                            
+                            print 'nw diagonal deetected'
                             list_indices.append((j,j+1)) 
                     elif i < 0:
                         if self.arr[-i,-i+j] == 0:
@@ -186,7 +183,7 @@ class Board(object):
                 if np.array_equal(b.diagonal(i)[j+1:j+4],a):
                     if i >= 0:
                         if b[j,j+i] == 0:
-                            
+                            print 'ne diagonal detected'
                             list_indices.append((j,j+1))
                     elif i < 0:
                         if b[-i,-i+j] == 0 :
@@ -270,36 +267,96 @@ class Board(object):
             if self.arr[j,col] == 0:
                 self.arr[j,col] = team
                 self.moves.append(col)
+                self.indices.remove((j,col))
+                if j == 0:
+                    self.open_cols.remove(col)
+
                 return True
     def checkmate(self, team1, team2):
         '''check whether the board is in a checkmate state for team1'''
         newboard = copy.deepcopy(self)
+        print 'new newboard in checkmate function '
+        print newboard.arr
         list_cols = range(self.width)
         ans = 0
         for col1 in list_cols:
             ## one move ahead for team 2
             newboard.add_move(col1,team2)
+            print 'modified hypothetical board in checkmate function' 
+            print newboard.arr
             ## make sure the other team doesn't win in the meantime
             if not self.check_four(team2):
+                print 'passed the next step, team 2 did not win with this move'
                 for col2 in list_cols:
                     newboard.add_move(col2,team1)
+                    print 'next hypothetical board ' 
+                    print newboard.arr
                     if newboard.check_four(team1):
                         ans += 1
+                        newboard.remove_move(col2)
+                        break
+                    newboard.remove_move(col2)
+            newboard.remove_move(col1)
+                
         if ans == 7:
             return True
         return False
-    ## below might be useless. it's either len 0 (returns None), len 1 (doesn't help) or len >1 (checkmate)
-    # def accessible_open_threes(self, team1, team2):
-    #     newboard = copy.deepcopy(self)
-    #     list_cols = range(self.width)
-    #     l = self.check_open_three(team1)
-    #     accessible_threes = []
-    #     for tup in l:
-    #         newboard.add_move(tup[1],team1)
-    #         if newboard.check_four(team1):
-    #             accessible_threes += tup
-    #             return accessible_threes
-    #     
+    def check_move_checkmate(self,col,team1,team2):
+        '''check whether the given move puts the board in a checkmate state'''
+        list_indices = []
+        for j in range(5,-1,-1):
+            if self.arr[j,col] == 0:
+                self.arr[j,col] = team1
+                value = self.checkmate(team1,team2)
+                self.arr[j,col] = 0
+                if value:
+                    return True
+        return False
+    def remove_move(self,col):
+        found = 0
+        for j in range(5,-1,-1):
+            if self.arr[j,col] == 0:
+                found += 1
+                if j == 5:
+                    raise 'ERROR: tried to remove move from empty column'
+                else:
+                    self.arr[j+1,col] = 0
+                    self.indices.append((j+1,col))
+        if found == 0:
+            self.arr[0,col] = 0
+            self.open_cols.append(col)
+            self.indices.append((0,col))
+                
+            
+                
+        
+        
+    
+    def accessible_open_three(self, team1):
+        '''is there an open three that can be capitalized on in this move? '''
+        newboard = copy.deepcopy(self)
+        list_cols = range(self.width)
+        for col in list_cols:
+            newboard.add_move(col,team1)
+            value = newboard.check_four(team1)
+            newboard.remove_move(col)
+            if value:
+                return col
+        return False
+        # l = self.check_open_three(team1)
+        #         accessible_threes = []
+        #         print l
+        #         if l:
+        #             for tup in l:
+        #                 newboard.add_move(tup[1],team1)
+        #                 if newboard.check_four(team1):
+        #                     accessible_threes.append(tup)
+        #                 newboard.remove_move(tup[1])
+        #         
+        #         if len(accessible_threes) > 0:
+        #             return accessible_threes
+        #         return False
+        
     # def check_move_tree(self,col,team):
     #     list_indices = []
     #     for j in range(5,-1,-1):
