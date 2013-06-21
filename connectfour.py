@@ -12,18 +12,23 @@ for j in range(6):
 #     def __init__(self, num, strat, nummoves=0):
 
 class Board(object):
-    def __init__(self, team1, team2, open_cols=range(7), moves=None, indices=list(indices_default), arr=np.zeros((6,7),dtype=int), height=6, width=7):
-        self.arr = arr
+    def __init__(self, team1, team2, height=6, width=7):
+        self.arr = np.zeros((6,7),dtype=int)
+        self.open_cols = range(7)
+        self.moves = []
         self.team1 = team1
         self.team2 = team2
         self.height = height
         self.width = width
-        self.indices = indices
-        if moves is None:
-            self.moves = []
-        else:
-            self.moves = moves
-        self.open_cols = open_cols
+        self.indices = list(self.build_indices())
+        self.available_fours = self.build_available_four_strings()
+
+    def build_indices(self):
+        indices = ()
+        for j in range(6):
+            for i in range(7):
+                indices += ((j,i),)
+        return indices
 
     def surrounders(self, team, index):
         '''key method to the surrounders strategy. checks branches in all directions for potential 4's in a row for the given team
@@ -132,64 +137,110 @@ class Board(object):
         if upright + downleft >= 3:
             total += upright + downleft
         return total
-                
-    def check_four(self,team):
-        '''check for four in a row, rows, columns and diagonals'''
-        a = np.array(4*[team],dtype=int)
-   
-        ## first, check rows
-        for t in range(self.height):
-            for r in range(self.width-3):
-                if np.array_equal(self.arr[t,r:r+4],a):
- 
-                    return True
-        ## columns         
-        for r in range(self.width):
-            for t in range(self.height-3):
-                if np.array_equal(self.arr[t:t+4,r],a):
+    def build_available_four_strings(self):
+        '''a list. each entry is a list of four indices making a possible connect four'''
+        l = []
+        for i in range(69):
+            l.append([])
+        
+        ## rows
+        r = 0
+        iters = 0
+        while r <= 5:
+            c = 0
+            while c <= 3:
+                for i in range(4):
+                    l[iters].append((r,c+i))
+                iters += 1
+                c += 1
+            r += 1
+        
+        ## columns
+        c = 0
+        while c <= 6:
+            r = 0
+            while r <= 2:
+                for i in range(4):
+                    l[iters].append((r+i,c))
+                iters += 1
+                r += 1
+            c += 1
+        
+        ## nw diagonals
+        r = 2
+        while r >= 0:
+            c = 0
+            while c <= 3:
+                for i in range(4):
+                    l[iters].append((r+i,c+i))
+                iters += 1
+                c += 1
+            r -= 1
+        
 
-                    return True
-        ## northwest diagonals
-        for i in range(-2,4):
-            length = len(self.arr.diagonal(i))
-            for j in range(length-3):
-                if np.array_equal(self.arr.diagonal(i)[j:j+4],a):
+        ## ne diagonals
+        r = 2
+        while r >= 0:
+            c = 6
+            while c >= 3:
+                for i in range(4):
+                    l[iters].append((r+i,c-i))
+                iters += 1
+                c -= 1
+            r -= 1
 
-                    return True
-        ## northeast diagonals
-        b = np.fliplr(self.arr)
-        for i in range(-2,4):
-            length = len(b.diagonal(i))
-            for j in range(length-3):
-                if np.array_equal(b.diagonal(i)[j:j+4],a):
- 
-                    return True
-
+        return l
+    def check_four_alternate(self,team):
+        for entry in self.available_fours:
+            temp_list = []
+            for tup in entry:
+                temp_list.append(self.arr[tup[0],tup[1]])
+            if temp_list == [team,team,team,team]:
+                return True
         return False
+
+    def check_open_three(self,team):
+        '''a list of open threes for the given team. each element of the list is the list of indices
+        corresponding to the available three'''
+        l = []
+        for entry in self.available_fours:
+            temp_list = []
+            for tup in entry:
+                temp_list.append(self.arr[tup[0],tup[1]])
+            total = 0
+            for num in temp_list:
+                if num != team and num != 0:
+                    total = 0
+                    break
+                elif num == team:
+                    total += 1
+            if total == 3:
+                l.append(entry)
+
+        return l
+
+    def open_three_openings(self,team):
+        '''returns a list of indices of only the OPEN entries in the open threes'''
+        l1 = []
+        l2 = self.check_open_three(team)
+        for l in l2:
+            for tup in l:
+                if self.arr[tup[0],tup[1]] == 0:
+                    l1.append(tup)
+        return l1
+
+
     def check_move_win(self,col,team):
         '''will a move in the specified col for the team end the game?''' 
         for j in range(5,-1,-1):
             if self.arr[j,col] == 0:
                 self.arr[j,col] = team
                 
-                value = self.check_four(team)
+                value = self.check_four_alternate(team)
                 self.arr[j,col] = 0
                 return value
         return False
-    def check_move_three(self,col,team):
-        list_indices = []
-        for j in range(5,-1,-1):
-            if self.arr[j,col] == 0:
-                self.arr[j,col] = team
-                list_tuples = self.check_open_three(team)
-                self.arr[j,col] = 0
-                if list_tuples != False:
-                    #list_indices.append(list_tuples)
-                    for tup in list_tuples:
-                        list_indices.append(tup)
-        if len(list_indices) > 0:
-            return list_indices
-        return False
+
     def check_move_surrounders(self,col,team):
         list_indices = []
         for j in range(5,-1,-1):
@@ -226,17 +277,19 @@ class Board(object):
             self.open_cols.append(col)
             self.indices.append((0,col))    
     
-    def accessible_open_three(self, team1):
-        '''is there an open three that can be capitalized on in next move for team1? if there is, return the col of that move '''
+    def accessible_open_threes(self, team1):
+        '''is there an open three that can be capitalized on in next move for team1? if there is, return the columns of those moves 
+        in a list '''
+        l = []
         newboard = copy.deepcopy(self)
         list_cols = range(self.width)
         for col in list_cols:
             newboard.add_move(col,team1)
-            value = newboard.check_four(team1)
+            value = newboard.check_four_alternate(team1)
             newboard.remove_move(col)
             if value:
-                return True
-        return False
+                l.append(col)
+        return len(l)   ## will map to False if len(l) == 0
 
 
     ### not using the methods below yet, but they could be useful. have tested them
@@ -246,32 +299,32 @@ class Board(object):
         newboard = copy.deepcopy(self)
         print 'new newboard in checkmate function '
         print newboard.arr
-        list_cols = range(self.width)
+        l = newboard.opencols[:]
         ans = 0
-        for col1 in list_cols:
+        for col1 in l:
             ## one move ahead for team 2
             newboard.add_move(col1,team2)
             print 'modified hypothetical board in checkmate function' 
             print newboard.arr
             ## make sure the other team doesn't win in the meantime
-            if not self.check_four(team2):
+            if not self.check_four_alternate(team2):
                 print 'passed the next step, team 2 did not win with this move'
-                for col2 in list_cols:
-                    newboard.add_move(col2,team1)
-                    print 'next hypothetical board ' 
-                    print newboard.arr
-                    if newboard.check_four(team1):
-                        ans += 1
-                        newboard.remove_move(col2)
-                        break
-                    newboard.remove_move(col2)
+                if self.accessible_open_threes(team1):
+                    ans += 1
             newboard.remove_move(col1)
                 
-        if ans == 7:
+        if ans == len(l):
             return True
         return False
     def check_move_checkmate(self,col,team1,team2):
-        '''check whether the given move puts the board in a checkmate state'''
+        '''check whether the given move puts the board in a checkmate state for team1'''
+        newboard = copy.deepcopy(self)
+        newboard.add_move(col, team1)
+        if newboard.checkmate(team1,team2):
+            return True
+        return False
+
+
         list_indices = []
         for j in range(5,-1,-1):
             if self.arr[j,col] == 0:
