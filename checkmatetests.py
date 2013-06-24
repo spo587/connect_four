@@ -1,6 +1,6 @@
 import connectfour as cf
 import copy
-import strategies_connect_four as scf
+import cf_strats_redone as scf
 import random
 
 b = cf.Board(1,2)
@@ -29,52 +29,87 @@ def test_betters(numtrials):
 		c = createrandomboard(8)
 		
 		#print better2(1,2,c) == better(1,2,c)
-		a = scf.better1(1,2,c)
-		b = scf.better2(1,2,c)
-		e = scf.better1(2,1,c)
-		f = scf.better2(2,1,c)
 		print c.arr
-		print a == b
-		print e == f
-		if a!=b:
-			print c.arr
-			print 'team 1 ', a
-			print 'team1 ', b
-		if e != f:
-			print c.arr
-			print 'team2 ', e
-			print 'team2  ', f
+		if c.accessible_open_threes(1):
+			print 'team 1 wins the game on this move'
+		else:
+			ans = c.checkmate_moves(1,2)
+			if ans is not False:
+				print 'checkmate move for team 1 ', ans
+				print 'move determined by better1 for team 2  ', scf.better3(2,1,c)
+		if c.accessible_open_threes(2):
+			print 'team 2 wins the game on this move'
+		else:
+			ans = c.checkmate_moves(2,1)
+			if ans is not False:
+				print 'checkmate move for team 2 ', ans
+				print 'move determined by better1 unction for team1  ', scf.better3(1,2,c)
 		i += 1
 		
 
-test_betters(15)
+#test_betters(15)
 
-[[0 0 0 0 0 0 0]
- [0 0 0 0 0 2 0]
- [0 0 2 0 0 1 0]
- [0 0 2 0 0 2 0]
- [0 0 1 2 0 1 1]
- [2 1 2 1 1 2 1]]
-team 1  [3, 4] --  better1
-team1  [0, 1, 2, 3, 4, 5, 6]   --better2
+b.add_move(6,1)
+b.add_move(6,2)
+b.add_move(5,2)
+b.add_move(5,2)
+b.add_move(5,1)
+b.add_move(5,1)
 
-[[0 0 0 0 0 0 0]
- [0 0 0 0 0 0 0]
- [0 0 0 0 0 2 0]
- [1 1 0 0 0 1 0]
- [2 1 2 0 2 1 0]
- [1 2 1 2 2 2 1]]
-team2  [0, 1, 2, 4, 5, 6]  -- better1
-team2   [0, 1, 2, 3, 4, 5, 6] --better2
+b.add_move(4,2)
 
-[[0 2 0 0 0 0 0]
- [0 1 0 0 0 0 0]
- [0 1 0 0 0 0 0]
- [2 2 0 0 1 0 0]
- [1 1 0 0 2 0 0]
- [2 1 2 2 1 2 1]]
-team2  [2, 3] --better1
-team2   [0, 2, 3, 4, 5, 6] --better2
+b.add_move(3,2)
+b.add_move(3,1)
+b.add_move(3,1)
+b.add_move(3,2)
+
+b.add_move(2,1)
+b.add_move(2,1)
+b.add_move(2,1)
+b.add_move(2,2)
+b.add_move(1,2)
+b.add_move(1,2)
+b.add_move(1,2)
+b.add_move(1,1)
+b.add_move(5,1)
+b.add_move(5,2)
+b.add_move(2,1)
+#b.add_move(4,1)
+
+print b.arr
+print b.checkmate_moves(1,2)
+print scf.real_strat1(1,2,b)
+
+
+
+
+assert False
+# [[0 0 0 0 0 0 0]
+#  [0 0 0 0 0 2 0]
+#  [0 0 2 0 0 1 0]
+#  [0 0 2 0 0 2 0]
+#  [0 0 1 2 0 1 1]
+#  [2 1 2 1 1 2 1]]
+# team 1  [3, 4] --  better1
+# team1  [0, 1, 2, 3, 4, 5, 6]   --better2
+
+# [[0 0 0 0 0 0 0]
+#  [0 0 0 0 0 0 0]
+#  [0 0 0 0 0 2 0]
+#  [1 1 0 0 0 1 0]
+#  [2 1 2 0 2 1 0]
+#  [1 2 1 2 2 2 1]]
+# team2  [0, 1, 2, 4, 5, 6]  -- better1
+# team2   [0, 1, 2, 3, 4, 5, 6] --better2
+
+# [[0 2 0 0 0 0 0]
+#  [0 1 0 0 0 0 0]
+#  [0 1 0 0 0 0 0]
+#  [2 2 0 0 1 0 0]
+#  [1 1 0 0 2 0 0]
+#  [2 1 2 2 1 2 1]]
+# team2  [2, 3] --better1
+# team2   [0, 2, 3, 4, 5, 6] --better2
 
 
 #[[0 0 0 0 0 0 0]
