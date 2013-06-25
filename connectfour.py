@@ -88,14 +88,7 @@ class Board(object):
         l = []
         for entry in self.available_fours:
             four_list = [self.arr[i][j] for i, j in entry]
-            total = 0
-            for num in four_list:
-                if num != player and num != 0:
-                    total = 0
-                    break
-                elif num == player:
-                    total += 1
-            if total == 3:
+            if four_list.count(player) == 3 and four_list.count(0) == 1:
                 l.append(entry)
         return l
 
