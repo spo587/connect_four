@@ -307,7 +307,7 @@ def play_game_1_player_comp_leads(strat=strat, team1=player1, team2=player2, boa
         elif board.accessible_open_threes(team1):
             print '###### CHECK #######'
     print 'its a draw!!!!!'
-
+#### changed!!!!
 if __name__ == '__main__': 
     play_game_1_player_comp_leads()
     #play_game_1_player_human_leads()
