@@ -87,11 +87,9 @@ class Board(object):
         corresponding to the available three'''
         l = []
         for entry in self.available_fours:
-            temp_list = []
-            for tup in entry:
-                temp_list.append(self.arr[tup[0]][tup[1]])
+            four_list = [self.arr[i][j] for i, j in entry]
             total = 0
-            for num in temp_list:
+            for num in four_list:
                 if num != player and num != 0:
                     total = 0
                     break
