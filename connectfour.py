@@ -16,19 +16,20 @@ class Board(object):
         self.player2 = player2
         self.height = height
         self.width = width
-        self.available_fours = self.build_available_four_strings()
+        self.available_fours_all = self.build_available_four_strings_all()
+        self.available_fours_no_columns = self.build_available_four_strings_no_columns()
 
-    def build_available_four_strings(self):
+    def build_available_four_strings_no_columns(self):
         '''a list. each entry is a list of four indices making a possible connect four'''
         fours = []
         ## rows
         for row in range(self.height):
             for col in range(self.width - 3):
                 fours.append([(row, col+i) for i in range(4)])
-        ## columns
-        for row in range(self.height - 3):
-            for col in range(self.width):
-                fours.append([(row+i, col) for i in range(4)])
+        # ## columns
+        # for row in range(self.height - 3):
+        #     for col in range(self.width):
+        #         fours.append([(row+i, col) for i in range(4)])
         ## nw diagonals
         for row in range(self.height - 3):
             for col in range(self.width - 3):
@@ -37,6 +38,15 @@ class Board(object):
         for row in range(self.height - 3, self.height):
             for col in range(self.width - 3):
                 fours.append([(row-i, col+i) for i in range(4)])
+        assert len(fours) == 69 - 21
+        return fours
+
+    def build_available_four_strings_all(self):
+        fours = self.build_available_four_strings_no_columns()
+        ## add columns
+        for row in range(self.height - 3):
+            for col in range(self.width):
+                fours.append([(row+i, col) for i in range(4)])
         assert len(fours) == 69
         return fours
 
@@ -76,12 +86,12 @@ class Board(object):
         return len(unique_squares) - 1
 
     def available_fours_at(self, index):
-        return [line for line in self.available_fours if index in line]
+        return [line for line in self.available_fours_no_columns if index in line]
 
 
     def check_four_alternate(self,player):
         '''checks the board for four in a row for the given player'''
-        for entry in self.available_fours:
+        for entry in self.available_fours_all:
             four_list = [self.arr[i][j] for i, j in entry]
             s = set(four_list)
             if len(s) == 1 and s.pop() == player:
@@ -93,7 +103,7 @@ class Board(object):
         '''a list of open threes for the given player. each element of the list is the list of four indices
         corresponding to the available three'''
         l = []
-        for entry in self.available_fours:
+        for entry in self.available_fours_all:
             four_list = [self.arr[i][j] for i, j in entry]
             if four_list.count(player) == 3 and four_list.count(0) == 1:
                 l.append(entry)
@@ -276,7 +286,7 @@ class Board(object):
                 return move
         return False
 
-    def utility_estimator(self,player1,player2,weight_center, weight_stacks,weight_open_rows):
+    def utility_estimator(self,player1,player2,weight_center, weight_stacks,weight_open_rows,toPrint=False):
         '''the estimator of the utility of the board state for player1'''
         center_score = 0
         for j in range(self.height):
@@ -310,6 +320,10 @@ class Board(object):
         ## weight the stacks higher than other open threes
 
         threes_factor = len(u1) + weight_stacks*stacks1+weight_open_rows*open_rows_1 - (len(u2) + weight_stacks*stacks2+weight_center*open_rows_1)
+        if toPrint:
+            print 'surrounders factor ', surrounders_factor
+            print 'center score ', center_score
+            print 'threes factor ', threes_factor
         utility = surrounders_factor + threes_factor + center_score
         return utility
 

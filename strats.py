@@ -13,29 +13,29 @@ or a simulation of the computer vs itself with different strategies'''
 def minimum(player1,player2,board):
     '''strategy that returns a move only to win the game or if comp is in check. returns a list that will be passed
      to other functions'''
-    if len(board.moves) == 1 and board.moves[0] != 3 or len(board.moves) == 0:
-        return [3]
-    elif len(board.moves) == 1 and board.moves[0] == 3:
-        return [2]
-    elif len(board.moves) == 2 and board.moves[1] == 3:
-        return [2]
-    else:
-        l = board.open_cols[:]
-        forces = []
-        for col in l:
-            if board.check_move_win(col,player1):
-                print col
-                return [col]
-        for col in l:
-            if board.check_move_win(col,player2):
-                forces.append(col)
-        if len(forces) == 1:
-            print forces[0]
-            return [forces[0]]
-        elif len(forces) > 1:
-            print 'minimum function fails to find a move to avoid defeat. must be checkmate'
+    # if len(board.moves) == 1 and board.moves[0] != 3 or len(board.moves) == 0:
+    #     return [3]
+    # elif len(board.moves) == 1 and board.moves[0] == 3:
+    #     return [2]
+    # elif len(board.moves) == 2 and board.moves[1] == 3:
+    #     return [2]
+    # else:
+    l = board.open_cols[:]
+    forces = []
+    for col in l:
+        if board.check_move_win(col,player1):
+            print col
+            return [col]
+    for col in l:
+        if board.check_move_win(col,player2):
+            forces.append(col)
+    if len(forces) == 1:
+        print forces[0]
+        return [forces[0]]
+    elif len(forces) > 1:
+        print 'minimum function fails to find a move to avoid defeat. must be checkmate'
 
-        return l
+    return l
 
 
 def next_min(player1,player2,board):
@@ -192,7 +192,7 @@ def surrounders_stacker(player1,player2,board,l):
     print 'final potential moves list determined by surrounders function ', final_list
     return final_list
 
-def utility_function(player1,player2,board,l,weight1, weight2):
+def utility_function(player1,player2,board,l,weight_center, weight_stacks,weight_open_rows):
     '''look for the move that implements minimax on the utility board function, looking two moves ahead'''
     newboard = copy.deepcopy(board)
     final_list = []
@@ -208,7 +208,7 @@ def utility_function(player1,player2,board,l,weight1, weight2):
             list_of_utilities = []
             for col2 in l2:
                 newboard.add_move(col2,player2)
-                u = newboard.utility_estimator(player1,player2,weight1, weight2)
+                u = newboard.utility_estimator(player1,player2,weight_center, weight_stacks,weight_open_rows)
                 list_of_utilities.append(u)
                 newboard.remove_move(col2)
             utility_dict[col1] = min(list_of_utilities)
@@ -310,12 +310,14 @@ def strat_utility(player1,player2,board,weight_center, weight_stacks,weight_open
 def comp_play_comp(strat1,strat2,team1=1,team2=2):
     board = cf.Board(team1,team2)
     for i in range(21):
+        print 'utility function for player 1', board.utility_estimator(1,2,1,3,1)
         board.add_move(strat1(team1,team2,board,1,3,1,show_decision=True),team1)
         print 'number of moves so far: ', len(board.moves)
         pprint(board.arr)
         if board.check_four_alternate(team1):
             print 'team 1 wins!!!!!'
             return 1
+        print 'utility function for player 2', board.utility_estimator(2,1,3,2,1)
         board.add_move(strat2(team2,team1,board,3,2,1,show_decision=True),team2)
         print 'number of moves so far: ', len(board.moves)
         pprint(board.arr)
@@ -328,15 +330,17 @@ def comp_play_comp(strat1,strat2,team1=1,team2=2):
 
 def play_game_1_player_comp_leads(strat=strat_utility, team1=1, team2=2, board=cf.Board(1,2)):
     for i in range(21):
-        print 'utility estimator for you, human player ', board.utility_estimator(1,2,2,2)
-        board.add_move(strat(team2,team1,board,2,2,show_decision=True),team2)
+        print 'utility estimator for you, human player '
+        print board.utility_estimator(1,2,1,1,1,toPrint=True)
+        board.add_move(strat(team2,team1,board,1,1,1,show_decision=True),team2)
         pprint(board.arr)
         if board.check_four_alternate(team2):
             print 'computer wins!!!!!'
             return
         elif board.accessible_open_threes(team2):
             print '###### CHECK #######'
-        print 'utility estimator for you, human player ', board.utility_estimator(1,2,2,2)
+        print 'utility estimator for you, human player '
+        print board.utility_estimator(1,2,1,1,1,toPrint=True)
         if not board.add_move(int(raw_input('team 1, your move, plz:  ')),team1):
             board.add_move(int(raw_input('team 1, your move, plz:  ')),team1)
         pprint(board.arr)
@@ -348,9 +352,9 @@ def play_game_1_player_comp_leads(strat=strat_utility, team1=1, team2=2, board=c
     print 'its a draw!!!!!'
 #### changed!!!!
 if __name__ == '__main__':
-    #play_game_1_player_comp_leads()
+    play_game_1_player_comp_leads()
     #play_game_1_player_human_leads()
-    comp_play_comp(strat_utility,strat_utility)
+    #comp_play_comp(strat_utility,strat_utility)
     #print multiple_games_computer(4,8,16)
     #print which_strat_simulation(1)
 
