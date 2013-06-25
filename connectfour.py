@@ -77,8 +77,7 @@ class Board(object):
         for entry in self.available_fours:
             four_list = [self.arr[i][j] for i, j in entry]
             s = set(four_list)
-            if len(s) == 1:
-                if s.pop() == player:
+            if len(s) == 1 and s.pop() == player:
                     return True
         return False
 
