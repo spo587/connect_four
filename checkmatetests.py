@@ -1,6 +1,6 @@
 import connectfour as cf
 import copy
-import cf_strats_redone as scf
+import strats as scf
 import random
 
 b = cf.Board(1,2)
@@ -49,39 +49,65 @@ def test_betters(numtrials):
 
 #test_betters(15)
 
-b.add_move(6,1)
-b.add_move(6,2)
-b.add_move(5,2)
-b.add_move(5,2)
-b.add_move(5,1)
-b.add_move(5,1)
 
-b.add_move(4,2)
 
-b.add_move(3,2)
-b.add_move(3,1)
-b.add_move(3,1)
-b.add_move(3,2)
 
-b.add_move(2,1)
-b.add_move(2,1)
-b.add_move(2,1)
-b.add_move(2,2)
-b.add_move(1,2)
-b.add_move(1,2)
-b.add_move(1,2)
-b.add_move(1,1)
-b.add_move(5,1)
-b.add_move(5,2)
-b.add_move(2,1)
-#b.add_move(4,1)
+player1 = cf.Player(1)
+player2 = cf.Player(2)
+b = cf.Board(player1,player2)
+
+b.add_move(5,player2)
+
+b.add_move(4,player1)
+
+# player1.make_move(4,b)
+# b.add_move(4,1)
+
+# player2.make_move(3,b)
+# b.add_move(3,2)
+# player1.make_move(3,b)
+# b.add_move(3,1)
+# player1.make_move(3,b)
+# b.add_move(3,1)
+
+# player1.make_move(2,b)
+# b.add_move(2,1)
+# player2.make_move(2,b)
+# b.add_move(2,2)
+# player1.make_move(2,b)
+# b.add_move(2,1)
+# player2.make_move(1,b)
+# b.add_move(1,2)
+# player2.make_move(0,b)
+# b.add_move(0,2)
+# player2.make_move(0,b)
+# b.add_move(0,2)
+
+# player2.make_move(4,b)
+# b.add_move(4,2)
+# player2.make_move(0,b)
+# b.add_move(0,2)
+# player1.make_move(0,b)
+# b.add_move(0,1)
+
+
+
+
+
+
+
+
 
 print b.arr
-print b.checkmate_moves(1,2)
-print scf.real_strat1(1,2,b)
+print player1.indices
+print player2.indices
+print b.check_total_surrounders(player1)
+print strat(player1)
 
+#print b.stacked_open_threes(1)
+#print scf.avoid_stacked_open_threes_opp(2,1,b)
 
-
+	
 
 assert False
 # [[0 0 0 0 0 0 0]

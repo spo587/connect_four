@@ -3,26 +3,28 @@ import copy
 import connectfour as cf
 from collections import defaultdict
 
-## TODO: fix bug that occurs when a row is filled and computer is forced to make a move, it makes human choose another move
-## instead....very smart
-##TODO: still a minor bug in surrounders function, it's 1 too high sometimes
-## TODO: major bug in the naive strategy, not sure why
-def minimum(comp,human,board):
+'''this file contains the computer's strategies that will be implemented. the functions are stacked on top of each other, starting
+with a minimum function. each function returns a list, and the more complex functions call the previous functions in building their own
+lists of potential moves. this file also contains the basic playgame functions, either to play human (with manual input) vs computer,
+or a simulation of the computer vs itself with different strategies'''
+def minimum(player1,player2,board):
     '''strategy that returns a move only to win the game or if comp is in check. returns a list that will be passed
      to other functions'''
     if len(board.moves) == 1 and board.moves[0] != 3 or len(board.moves) == 0:
         return [3]
     elif len(board.moves) == 1 and board.moves[0] == 3:
         return [2]
+    elif len(board.moves) == 2 and board.moves[1] == 3:
+        return [2]
     else:
         l = board.open_cols[:]
         forces = []
         for col in l:
-            if board.check_move_win(col,comp):
+            if board.check_move_win(col,player1):
                 print col
                 return [col]
         for col in l:
-            if board.check_move_win(col,human):
+            if board.check_move_win(col,player2):
                 forces.append(col)
         if len(forces) == 1:
             print forces[0]
@@ -35,7 +37,7 @@ def minimum(comp,human,board):
 
 def next_min(player1,player2,board):
     '''will return a list of moves that will not immediately lose the game, or the list of all open columns if the board
-    is in checkmate'''
+    is in checkmate for player2'''
     newboard = copy.deepcopy(board)
     l = minimum(player1,player2,newboard)
     if len(l) == 1:
@@ -59,7 +61,7 @@ def next_min(player1,player2,board):
 
 
 def avoid_checkmate(player1,player2,board):
-    '''builds on the min strategies to return a list of moves that will not immediately result in checkmate. if a checkmate
+    '''builds on the min strategies to return a list of moves that will not then immediately result in checkmate. if a checkmate
     move is available, returns it in a list of length 1'''
     l = next_min(player1,player2,board)
     if len(l) == 1:
@@ -87,15 +89,65 @@ def avoid_checkmate(player1,player2,board):
 
                 return l
 
+def avoid_three_in_open_row(player1,player2,board):
+    '''returns all moves that will avoid the opponent building three in an open row with 0's on either side'''
+    if len(board.moves) < 4:
+        return range(board.width)
+    newboard = copy.deepcopy(board)
+    l = newboard.open_cols[:]
+    final_list = []
+    for col in l:
+        newboard.add_move(col,player2)
+        for tup in newboard.open_three_openings(player2):
+            if (tup[0] + 4, tup[1]) in newboard.open_three_openings(player2):
+                final_list.append(col)
+        newboard.remove_move(col)
+    other_list = avoid_checkmate(player1,player2,board)
+    if len(final_list) > 0:
+        for item in final_list:
+            if item not in other_list:
+                final_list.remove(item)
+        return final_list
+    else:
+        return l
 
-def test_strategy(player1,player2,board):
-    l = avoid_checkmate(player1,player2,board)
-    print l
+def gos(player1,player2,board):
+    '''if a player has stacked open threes in a column, it should move in that column to force the game. this function
+    returns a list of columns with stacked open threes'''
+    l = [item[0][0] for item in board.stacked_open_threes(player1)]
+    l2 = list(set(l))
+    return l2
+
+
+
+def no_gos(player1,player2,board):
+    '''if a move by player2 in a column results in a win for player1, then player1 should not go in that column, unless it
+    has open three indices stacked on top of each other. this function
+    eliminates those columns and returns list of available moves without them included'''
+    newboard = copy.deepcopy(board)
+    l = newboard.open_cols[:]
+    list_of_no_gos = []
+    for move in l:
+        newboard.add_move(move,player2)
+        if newboard.check_move_win(move,player1) is not False and move not in gos(player1,player2,board):
+            list_of_no_gos.append(move)
+        newboard.remove_move(move)
+    for item in list_of_no_gos:
+        l.remove(item)
     return l
+
+def gos_avoid_checkmate_combined(player1,player2,board):
+    list_of_gos = gos(player1,player2,board)
+    if len(list_of_gos) > 0:
+        l = [elem for elem in list_of_gos if elem in avoid_checkmate(player1,player2,board)]
+        if len(l) > 0:
+            return l
+    else:
+        return avoid_checkmate(player1,player2,board)
 
 def build_stacked_open_threes(player1,player2,board):
     stacks1 = len(board.stacked_open_threes(player1))
-    l = avoid_checkmate(player1,player2,board)
+    l = gos_avoid_checkmate_combined(player1,player2,board)
     newboard = copy.deepcopy(board)
     potential_moves = []
     for move in l:
@@ -107,14 +159,14 @@ def build_stacked_open_threes(player1,player2,board):
 
 def avoid_stacked_open_threes_opp(player1,player2,board):
     stacks2 = board.stacked_open_threes(player2)
-    l = avoid_checkmate(player1,player2,board)
+    l = gos_avoid_checkmate_combined(player1,player2,board)
     newboard = copy.deepcopy(board)
     potential_moves = l[:]
     for move in l:
         newboard.add_move(move,player1)
         for move2 in newboard.open_cols:
             newboard.add_move(move2,player2)
-            if newboard.stacked_open_threes(player2) > stacks2 and move in potential_moves:
+            if newboard.stacked_open_threes(player2) > stacks2 and move in potential_moves and newboard.stacked_open_threes(player2)[-1][1] not in newboard.open_three_openings(player1):
                 potential_moves.remove(move)
             newboard.remove_move(move2)
         newboard.remove_move(move)
@@ -131,10 +183,12 @@ def test_strategy2(player1,player2,board):
         return l2
     else:
         print 'no move avoids stack for opponent?'
-        return test_strategy(player1,player2,board)
+        return gos_avoid_checkmate_combined(player1,player2,board)
 
 def surrounders_stacker(player1,player2,board):
-    l = test_strategy2(player1,player2,board)
+    '''bases move on the surrounders function, subject to the checkmate constraint, the stacker constraint, and the open row constraint'''
+    l = test_strategy2(player1,player2,board) 
+    print 'modified list comprehension dealy ', l
     newboard = copy.deepcopy(board)
     dictionary_of_moves = {}
     for move in l:
@@ -154,6 +208,7 @@ def surrounders_stacker(player1,player2,board):
 
 
 def surrounders_builder(player1,player2,board,l):
+    '''takes a list of potential moves as an argument and returns the move with the most surrounders'''
     newboard = copy.deepcopy(board)
     dictionary_of_moves = {}
     for move in l:
@@ -171,11 +226,14 @@ def surrounders_builder(player1,player2,board,l):
     print 'final potential moves list determined by surrounders function ', final_list
     return final_list
 
-def utility_function(player1,player2,board):
+
+
+
+def utility_function(player1,player2,board,weight):
     '''look for the move that implements minimax on the utility board function, looking two moves ahead'''
     newboard = copy.deepcopy(board)
     final_list = []
-    l = avoid_checkmate(player1,player2,board)[:]
+    l = gos_avoid_checkmate_combined(player1,player2,board)[:]
     print 'columns available for moves based on test avoid checkmate function above ', l
     utility_dict = {}
     for col1 in l:
@@ -188,7 +246,7 @@ def utility_function(player1,player2,board):
             list_of_utilities = []
             for col2 in l2:
                 newboard.add_move(col2,player2)
-                u = newboard.utility_estimator(player1,player2)
+                u = newboard.utility_estimator(player1,player2,weight)
                 list_of_utilities.append(u)
                 newboard.remove_move(col2)
             utility_dict[col1] = min(list_of_utilities)
@@ -199,17 +257,43 @@ def utility_function(player1,player2,board):
     print 'final list of moves choosing from based on utility function ', final_list 
     return final_list
 
+## incorporate in this order: 1. min functions. 2. avoid checkmate 3. force game in go columns 4. build stacked open threes. 
+## 5. avoid stacked open threes for opponent. 6. minimax (ish) on board utility, two moves ahead. if early in game,
+## prioritize surrounders function. if later, prioritize utility function
+
 def real_strat(player1,player2,board,number):
     if len(board.moves) < number:
-        move = random.choice(surrounders_stacker(player1,player2,board))
-        print move
-        return move
+        l = [elem for elem in surrounders_stacker(player1,player2,board) if elem in no_gos(player1,player2,board)]
+        print 'this is the list in the real_strat function ', l
+        if len(l) == 0:
+            move = random.choice(surrounders_stacker(player1,player2,board))
+            print move
+            return move
+        else:
+            move = random.choice(l)
+            print move
+            return move
     else:
-        moves = utility_function(player1,player2,board)
+        ## set the utility stack weight to 3 or else to whatever you please
+        print 'this is the utility function list ', utility_function(player1,player2,board,3)
+        print 'this is the no-gos list ', no_gos(player1,player2,board)
+
+        moves = [elem for elem in utility_function(player1,player2,board,3) if elem in no_gos(player1,player2,board)]
         print 'moves from utility function ', moves
-        if len(moves) == 1:
+        if len(moves) == 0:
+            moves = utility_function(player1,player2,board,3)
+            if len(moves) == 1:
+                return moves[0]
+            elif len(moves) > 1:
+                fewer_moves = surrounders_builder(player1,player2,board,moves)
+                move = random.choice(fewer_moves)
+                print 'moves determined by surrounders function from utility function  ', fewer_moves
+                print move
+                return move
+        elif len(moves) == 1:
+            print moves[0]
             return moves[0]
-        if len(moves) > 1:
+        elif len(moves) > 0:
             fewer_moves = surrounders_builder(player1,player2,board,moves)
             move = random.choice(fewer_moves)
             print 'moves determined by surrounders function from utility function  ', fewer_moves
@@ -226,9 +310,11 @@ def real_strat(player1,player2,board,number):
 
 
 
+
+
 def play_game_1_player_comp_leads(strat=real_strat, team1=1, team2=2, board=cf.Board(1,2)):
     for i in range(21):
-        board.add_move(strat(team2,team1,board,10),team2)
+        board.add_move(strat(team2,team1,board,10),team2,toPrint=True)
         print board.arr
         if board.check_four_alternate(team2):
             print 'computer wins!!!!!'
@@ -306,11 +392,11 @@ def which_strat_simulation(numgames_per):
     return results_dict
 
 if __name__ == '__main__': 
-    #play_game_1_player_comp_leads()
+    play_game_1_player_comp_leads()
     #play_game_1_player_human_leads()
     #comp_play_comp()
     #print multiple_games_computer(4,8,16)
-    print which_strat_simulation(1)           
+    #print which_strat_simulation(1)           
     
     #computer_play_computer()
 

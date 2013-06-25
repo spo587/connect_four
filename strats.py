@@ -226,10 +226,14 @@ def strat(player1,player2,board, show_decisions=False):
 	elif len(first_cut) == 1:
 		print 'move determined by minimum function'
 		return first_cut[0]
+    if show_decision:
+        print 'past first cut'
 	second_cut = next_min(player1,player2,board)
 	if len(second_cut) == 1:
 		print 'move determined by next min function'
 		return second_cut[0]
+    if show_decision:
+        print 'past second cut'
 	third_cut = avoid_checkmate(player1,player2,board)
 	if len(third_cut) == 0:
 		print 'no move avoids checkmate'
@@ -237,10 +241,14 @@ def strat(player1,player2,board, show_decisions=False):
 	if len(third_cut) == 1:
 		print 'move determined by checkmate function'
 		return third_cut[0]
+    if show_decision:
+        print 'past third  cut'
 	fourth_cut = [item for item in third_cut if item in gos(player1,player2,board)]
 	if len(fourth_cut) > 0:
 		print 'move determined by gos function combined with avoid checkmate function'
 		return random.choice(fourth_cut)
+    if show_decision:
+        print 'past fourth cut'
 	fifth_cut = [item for item in third_cut if item in no_gos(player1,player2,board)]
 	if len(fifth_cut) == 0:
 		fifth_cut = third_cut
@@ -273,7 +281,7 @@ def strat(player1,player2,board, show_decisions=False):
 		print 'seventh_cut ', seventh_cut
 		print 'eight_cut ', eight_cut 
 
-	return eight_cut
+	return random.choice(eight_cut)
 
 #def strat_utility
 
