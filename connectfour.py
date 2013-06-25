@@ -27,103 +27,36 @@ class Board(object):
                 indices += ((j,i),)
         return indices
 
+    def opposite_player(self, player):
+        if player == self.player1:
+            return self.player2
+        else:
+            return self.player1
+
     def surrounders(self, player, index):
         '''key method to the surrounders strategy. checks branches in all directions for potential 4's in a row for the given player
         and the given index'''
-        a = 0
-        i,j = index
-        ## how many rows below, above, and columns below and above are there?
-        spare_rows_down = self.height - i - 1
-        spare_columns_right = self.width - j - 1
-        spare_rows_up = i
-        spare_columns_left = j
-        ## for checking diagonals, can't go too far or will raise an index error in the array
-        spare1 = min(spare_rows_down,spare_columns_right)
-        spare2 = min(spare_rows_up,spare_columns_left)
-        spare3 =  min(spare_rows_up,spare_columns_right)
-        spare4 = min(spare_rows_down,spare_columns_left)
-        ##check diagonals
-        ## down, right  
-        local = 0
-        for s in range(1,spare1+1):
-            if self.arr[i+s][j+s] in [0,player]:
-                local += 1
-            else:
-                break
-        downright = min(local,4)
-        ## up, left
-        local = 0
-        for s in range(-1,-spare2-1,-1):
-          
-            if self.arr[i+s][j+s] in [0,player]:
-                local += 1
-            else:
-                break
-        upleft = min(local,4)
-        ## d, on't count the square as its own surrounder
-        ##upright
-        local = 0
-        for s in range(1,spare3+1):
-            
-            if self.arr[i-s][j+s] in [player,0]: 
-                local += 1
-            else:
-  
-                break
-        upright = min(local,4)
-        ## down, left
-        local = 0
-        for s in range(0,-spare4,-1):
-            
-            if self.arr[i-s][j+s] in [player,0]: 
-                local += 1
-            else:
-                print local
-                break
-        downleft = min(local,4)
-        ##up
-        ## not adding this for now
-        #up = min(i,4)
-        ## down
-        local = 0
-        for s in range(i+1,self.height):
-            if self.arr[s][j] == player:
-                local += 1
-            else:
-                break
-        down = local
-        ## left right
-        ## right
-        local = 0
-        for s in range(1,spare_columns_right+1):
-            
-            if self.arr[i][j+s] == player or self.arr[i][j+s] == 0:
-                local += 1
-            else:
 
-                break
-        right = min(local,4)
-        ## left
-        local = 0
-        for s in range(1,spare_columns_left+1):
-            
-            if self.arr[i][j-s] == player or self.arr[i][j-s] == 0:
-                local += 1
-            else:
+        opponent = self.opposite_player(player)
+        adjacent_fours = self.available_fours_at(index)
 
-                break
-        left = min(local,4)
-        total = 0
-        if right +  left >= 3:
-            total += right + left
-        if upleft + downright  >= 3:
-            total += upleft + downright
-        ## let's not up the up/down component    
-        # if up + down >= 3:
-        #     total += up + down
-        if upright + downleft >= 3:
-            total += upright + downleft
-        return total
+        unoccupied_fours = adjacent_fours[:]
+        for line in adjacent_fours:
+            for i, j in line:
+                if self.arr[i][j] == opponent:
+                    unoccupied_fours.remove(line)
+        # no_opponent_fours = [line for line in adjacent_fours if not any([self.arr[i][j] == opponent for i,j in line])]
+
+        def add(x, y):
+            return x + y
+
+        squares = reduce(add, unoccupied_fours)
+        unique_squares = set(squares)
+        return len(unique_squares) - 1
+
+    def available_fours_at(self, index):
+        return [line for line in self.available_fours if index in line]
+
     def build_available_four_strings(self):
         '''a list. each entry is a list of four indices making a possible connect four'''
         fours = []
