@@ -192,11 +192,11 @@ def surrounders_stacker(player1,player2,board,l):
     print 'final potential moves list determined by surrounders function ', final_list
     return final_list
 
-def utility_function(player1,player2,board,l,weight):
+def utility_function(player1,player2,board,l,weight1, weight2):
     '''look for the move that implements minimax on the utility board function, looking two moves ahead'''
     newboard = copy.deepcopy(board)
     final_list = []
-    print 'columns available for moves based on test avoid checkmate function above ', l
+    print 'columns available for moves based on eight cut function above ', l
     utility_dict = {}
     for col1 in l:
         newboard.add_move(col1,player1)
@@ -208,19 +208,20 @@ def utility_function(player1,player2,board,l,weight):
             list_of_utilities = []
             for col2 in l2:
                 newboard.add_move(col2,player2)
-                u = newboard.utility_estimator(player1,player2,weight)
+                u = newboard.utility_estimator(player1,player2,weight1, weight2)
                 list_of_utilities.append(u)
                 newboard.remove_move(col2)
             utility_dict[col1] = min(list_of_utilities)
             newboard.remove_move(col1)
-    for col in utility_dict.keys():
-        if utility_dict[col] == max(utility_dict.values()):
-            final_list.append(col)
-    print 'final list of moves choosing from based on utility function ', final_list
-    return final_list
+    return utility_dict
+    # for col in utility_dict.keys():
+    #     if utility_dict[col] == max(utility_dict.values()):
+    #         final_list.append(col)
+    # print 'final list of moves choosing from based on utility function ', final_list
+    # return final_list
 
 
-def strat(player1,player2,board, show_decision=False):
+def strat_basic(player1,player2,board, show_decision=False):
     first_cut = minimum(player1,player2,board)
     if len(first_cut) == 0:
 
@@ -228,13 +229,13 @@ def strat(player1,player2,board, show_decision=False):
         return random.choice(board.open_cols)
     elif len(first_cut) == 1:
         print 'move determined by minimum function'
-        return first_cut[0]
+        return first_cut
     if show_decision:
         print 'past first cut ', first_cut
     second_cut = next_min(player1,player2,board)
     if len(second_cut) == 1:
         print 'move determined by next min function'
-        return second_cut[0]
+        return second_cut
     if show_decision:
         print 'past second cut ', second_cut
     third_cut = avoid_checkmate(player1,player2,board)
@@ -243,13 +244,13 @@ def strat(player1,player2,board, show_decision=False):
         return random.choice(board.open_cols)
     if len(third_cut) == 1:
         print 'move determined by checkmate function'
-        return third_cut[0]
+        return third_cut
     if show_decision:
         print 'past third  cut ', third_cut
     fourth_cut = [item for item in third_cut if item in gos(player1,player2,board)]
     if len(fourth_cut) > 0:
         print 'move determined by gos function combined with avoid checkmate function'
-        return random.choice(fourth_cut)
+        return fourth_cut
     if show_decision:
         print 'past fourth cut ', fourth_cut
     fifth_cut = [item for item in third_cut if item in no_gos(player1,player2,board)]
@@ -257,20 +258,20 @@ def strat(player1,player2,board, show_decision=False):
         fifth_cut = third_cut
     elif len(fifth_cut) == 1:
         print 'move determined to avoid checkmate but not move in a no-go column'
-        return fifth_cut[0]
+        return fifth_cut
     if show_decision:
         print 'past fifth cut ', fifth_cut
     sixth_cut = [item for item in fifth_cut if item in build_stacked_open_threes(player1,player2,board)]
     if len(sixth_cut) > 0:
         print 'move determined to build a stack'
-        return random.choice(sixth_cut)
+        return sixth_cut
     if show_decision:
         print 'past 6th cut ', sixth_cut
 
     seventh_cut = [item for item in fifth_cut if item in avoid_stacked_open_threes_opp(player1,player2,board)]
     if len(seventh_cut) == 1:
         print 'move determined to avoid an opponents stack'
-        return seventh_cut[0]
+        return seventh_cut
     elif len(seventh_cut) == 0:
         seventh_cut = fifth_cut
     if show_decision:
@@ -280,12 +281,28 @@ def strat(player1,player2,board, show_decision=False):
         eight_cut = seventh_cut
     elif len(eight_cut) == 1:
         print 'move determined to avoid an open row of three for opponent'
-        return eight_cut[0]
+        return eight_cut
     if show_decision:
 
         print 'eight_cut ', eight_cut
 
-    return random.choice(eight_cut)
+    return eight_cut
+
+def strat_utility(player1,player2,board,weight_center, weight_stacks,weight_open_rows,show_decision=False):
+    available_moves = strat_basic(player1,player2,board,show_decision=True)
+    list_of_maximum_utility_moves = []
+    if len(available_moves) == 1:
+        print 'utility function not called'
+        return available_moves[0]
+    dictionary_of_moves = utility_function(player1,player2,board,available_moves,weight_center,weight_stacks,weight_open_rows)
+    print 'this is the utility function dictionary ', dictionary_of_moves
+    for col in dictionary_of_moves.keys():
+        if dictionary_of_moves[col] == max(dictionary_of_moves.values()):
+            list_of_maximum_utility_moves.append(col)
+    print 'final list of moves choosing from based on utility function ', list_of_maximum_utility_moves
+    return random.choice(list_of_maximum_utility_moves)
+
+    
 
 ## change
 #def strat_utility
@@ -293,13 +310,13 @@ def strat(player1,player2,board, show_decision=False):
 def comp_play_comp(strat1,strat2,team1=1,team2=2):
     board = cf.Board(team1,team2)
     for i in range(21):
-        board.add_move(strat1(team1,team2,board,show_decision=True),team1)
+        board.add_move(strat1(team1,team2,board,1,3,1,show_decision=True),team1)
         print 'number of moves so far: ', len(board.moves)
         pprint(board.arr)
         if board.check_four_alternate(team1):
             print 'team 1 wins!!!!!'
             return 1
-        board.add_move(strat2(team2,team1,board,show_decision=True),team2)
+        board.add_move(strat2(team2,team1,board,3,2,1,show_decision=True),team2)
         print 'number of moves so far: ', len(board.moves)
         pprint(board.arr)
         if board.check_four_alternate(team2):
@@ -309,18 +326,20 @@ def comp_play_comp(strat1,strat2,team1=1,team2=2):
     return 0
 
 
-def play_game_1_player_comp_leads(strat=strat, team1=1, team2=2, board=cf.Board(1,2)):
+def play_game_1_player_comp_leads(strat=strat_utility, team1=1, team2=2, board=cf.Board(1,2)):
     for i in range(21):
-        board.add_move(strat(team2,team1,board,show_decision=True),team2)
-        print board.arr
+        print 'utility estimator for you, human player ', board.utility_estimator(1,2,2,2)
+        board.add_move(strat(team2,team1,board,2,2,show_decision=True),team2)
+        pprint(board.arr)
         if board.check_four_alternate(team2):
             print 'computer wins!!!!!'
             return
         elif board.accessible_open_threes(team2):
             print '###### CHECK #######'
+        print 'utility estimator for you, human player ', board.utility_estimator(1,2,2,2)
         if not board.add_move(int(raw_input('team 1, your move, plz:  ')),team1):
             board.add_move(int(raw_input('team 1, your move, plz:  ')),team1)
-        print board.arr
+        pprint(board.arr)
         if board.check_four_alternate(team1):
             print 'human wins!!!!!'
             return
@@ -331,7 +350,7 @@ def play_game_1_player_comp_leads(strat=strat, team1=1, team2=2, board=cf.Board(
 if __name__ == '__main__':
     #play_game_1_player_comp_leads()
     #play_game_1_player_human_leads()
-    comp_play_comp(strat,strat)
+    comp_play_comp(strat_utility,strat_utility)
     #print multiple_games_computer(4,8,16)
     #print which_strat_simulation(1)
 

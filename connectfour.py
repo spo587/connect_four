@@ -54,16 +54,23 @@ class Board(object):
         opponent = self.opposite_player(player)
         adjacent_fours = self.available_fours_at(index)
 
-        unoccupied_fours = adjacent_fours[:]
+        list_fours_to_remove = []
         for line in adjacent_fours:
             for i, j in line:
                 if self.arr[i][j] == opponent:
-                    unoccupied_fours.remove(line)
+                    list_fours_to_remove.append(tuple(line))
+        list_fours_to_remove_set = list(set(list_fours_to_remove))
+        for item in list_fours_to_remove_set:
+            item = list(item)
+            adjacent_fours.remove(item)
+
+        unoccupied_fours = adjacent_fours   
         # no_opponent_fours = [line for line in adjacent_fours if not any([self.arr[i][j] == opponent for i,j in line])]
 
         def add(x, y):
             return x + y
-
+        if len(unoccupied_fours) == 0:
+            return 0
         squares = reduce(add, unoccupied_fours)
         unique_squares = set(squares)
         return len(unique_squares) - 1
@@ -165,7 +172,7 @@ class Board(object):
         for row in range(self.height):
             for col in range(self.width):
                 if self.arr[row][col] == player:
-                    total += self.surrounders(player,index)
+                    total += self.surrounders(player,(row,col))
         return total
 
     def add_move(self,col,player,toPrint=False):
@@ -269,10 +276,16 @@ class Board(object):
                 return move
         return False
 
-    def utility_estimator(self,player1,player2,weight1, weight2):
+    def utility_estimator(self,player1,player2,weight_center, weight_stacks,weight_open_rows):
         '''the estimator of the utility of the board state for player1'''
-        s1 = board.check_total_surrounders(player1)
-        s2 = board.check_total_surrounders(player2)
+        center_score = 0
+        for j in range(self.height):
+            if self.arr[j][3] == player1:
+                center_score += weight_center
+            elif self.arr[j][3] == player2:
+                center_score -= weight_center
+        s1 = self.check_total_surrounders(player1)
+        s2 = self.check_total_surrounders(player2)
         surrounders_factor = s1 - s2
         u1 = self.open_three_openings(player1)[:]
         u2 = self.open_three_openings(player2)[:]
@@ -296,8 +309,8 @@ class Board(object):
         stacks2 = len(self.stacked_open_threes(player2))
         ## weight the stacks higher than other open threes
 
-        threes_factor = len(u1) + weight1*stacks1+weight2*open_rows_1 - (len(u2) + weight1*stacks2+weight2*open_rows_1)
-        utility = surrounders_factor + threes_factor
+        threes_factor = len(u1) + weight_stacks*stacks1+weight_open_rows*open_rows_1 - (len(u2) + weight_stacks*stacks2+weight_center*open_rows_1)
+        utility = surrounders_factor + threes_factor + center_score
         return utility
 
 
