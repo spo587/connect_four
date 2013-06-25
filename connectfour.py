@@ -75,11 +75,11 @@ class Board(object):
     def check_four_alternate(self,player):
         '''checks the board for four in a row for the given player'''
         for entry in self.available_fours:
-            temp_list = []
-            for tup in entry:
-                temp_list.append(self.arr[tup[0]][tup[1]])
-            if temp_list == [player,player,player,player]:
-                return True
+            four_list = [self.arr[i][j] for i, j in entry]
+            s = set(four_list)
+            if len(s) == 1:
+                if s.pop() == player:
+                    return True
         return False
 
 
