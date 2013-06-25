@@ -6,18 +6,6 @@ import copy
 '''this file contains the board class, whose methods will be called in the strategies file cf_strats_redone. you can also
 play a two-player, human vs. human game in this file.'''
 
-class Player(object):
-    def __init__(self,num):
-        self.num = num
-        self.indices = []
-    def make_move(self,col,board):
-        
-        if board.arr[0:5,col].all() != 0:
-            return False
-        for j in range(5,-1,-1):
-            if board.arr[j,col] == 0:
-                self.indices.append((j,col))
-                return True
 
 
 
@@ -61,7 +49,7 @@ class Board(object):
         ## down, right  
         local = 0
         for s in range(1,spare1+1):
-            if self.arr[i+s,j+s] in [0,player.num]:
+            if self.arr[i+s,j+s] in [0,player]:
                 local += 1
             else:
                 break
@@ -70,7 +58,7 @@ class Board(object):
         local = 0
         for s in range(-1,-spare2-1,-1):
           
-            if self.arr[i+s,j+s] in [0,player.num]:
+            if self.arr[i+s,j+s] in [0,player]:
                 local += 1
             else:
                 break
@@ -80,7 +68,7 @@ class Board(object):
         local = 0
         for s in range(1,spare3+1):
             
-            if self.arr[i-s,j+s] in [player.num,0]: 
+            if self.arr[i-s,j+s] in [player,0]: 
                 local += 1
             else:
   
@@ -90,7 +78,7 @@ class Board(object):
         local = 0
         for s in range(0,-spare4,-1):
             
-            if self.arr[i-s,j+s] in [player.num,0]: 
+            if self.arr[i-s,j+s] in [player,0]: 
                 local += 1
             else:
                 print local
@@ -102,7 +90,7 @@ class Board(object):
         ## down
         local = 0
         for s in range(i+1,self.height):
-            if self.arr[s,j] == player.num:
+            if self.arr[s,j] == player:
                 local += 1
             else:
                 break
@@ -112,7 +100,7 @@ class Board(object):
         local = 0
         for s in range(1,spare_columns_right+1):
             
-            if self.arr[i,j+s] == player.num or self.arr[i,j+s] == 0:
+            if self.arr[i,j+s] == player or self.arr[i,j+s] == 0:
                 local += 1
             else:
 
@@ -122,7 +110,7 @@ class Board(object):
         local = 0
         for s in range(1,spare_columns_left+1):
             
-            if self.arr[i,j-s] == player.num or self.arr[i,j-s] == 0:
+            if self.arr[i,j-s] == player or self.arr[i,j-s] == 0:
                 local += 1
             else:
 
@@ -192,7 +180,7 @@ class Board(object):
             temp_list = []
             for tup in entry:
                 temp_list.append(self.arr[tup[0],tup[1]])
-            if temp_list == [player.num,player.num,player.num,player.num]:
+            if temp_list == [player,player,player,player]:
                 return True
         return False
     def check_open_three(self,player):
@@ -205,10 +193,10 @@ class Board(object):
                 temp_list.append(self.arr[tup[0],tup[1]])
             total = 0
             for num in temp_list:
-                if num != player.num and num != 0:
+                if num != player and num != 0:
                     total = 0
                     break
-                elif num == player.num:
+                elif num == player:
                     total += 1
             if total == 3:
                 l.append(entry)
@@ -263,7 +251,7 @@ class Board(object):
         '''will a move in the specified col for the player end the game?''' 
         for j in range(5,-1,-1):
             if self.arr[j,col] == 0:
-                self.arr[j,col] = player.num
+                self.arr[j,col] = player
                 
                 value = self.check_four_alternate(player)
                 self.arr[j,col] = 0
@@ -275,7 +263,7 @@ class Board(object):
         list_indices = []
         for j in range(5,-1,-1):
             if self.arr[j,col] == 0:
-                self.arr[j,col] = player.num
+                self.arr[j,col] = player
                 value = self.surrounders(player,(j,col))
                 self.arr[j,col] = 0
                 return value
@@ -288,7 +276,6 @@ class Board(object):
 
     def add_move(self,col,player,toPrint=False):
         '''adds a move to the board for the given player in the given column'''
-        player.make_move(col,self)
         #if toPrint:
             #print self.indices
         if self.arr[0:5,col].all() != 0:
@@ -297,7 +284,7 @@ class Board(object):
             if toPrint:
                 print (j,col)
             if self.arr[j,col] == 0:
-                self.arr[j,col] = player.num
+                self.arr[j,col] = player
                 self.moves.append(col)
                 if toPrint:
                     print 'index to be removed', (j,col)
@@ -317,10 +304,6 @@ class Board(object):
                 else:
                     self.arr[j+1,col] = 0
                     self.indices.append((j+1,col))
-                    if (j+1,col) in self.player1.indices:
-                        self.player1.indices.remove((j+1,col))
-                    elif (j+1,col) in self.player2.indices:
-                        self.player2.indices.remove((j+1,col))
 
         if found == 0:
             self.arr[0,col] = 0
