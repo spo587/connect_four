@@ -3,6 +3,8 @@ import copy
 import connectfour as cf
 from collections import defaultdict
 
+## count, map, dir, reduce
+
 '''this file contains the computer's strategies that will be implemented. the functions are stacked on top of each other, starting
 with a minimum function. each function returns a list, and the more complex functions call the previous functions in building their own
 lists of potential moves. this file also contains the basic playgame functions, either to play human (with manual input) vs computer,

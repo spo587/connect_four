@@ -19,7 +19,7 @@ class Board(object):
         self.height = height
         self.width = width
         self.all_indices = self.build_indices()
-        self.indices = list(self.build_indices())
+        #self.indices = list(self.build_indices())
         self.available_fours = self.build_available_four_strings()
 
     def build_indices(self):
@@ -289,7 +289,7 @@ class Board(object):
                 self.moves.append(col)
                 if toPrint:
                     print 'index to be removed', (j,col)
-                self.indices.remove((j,col))
+                # self.indices.remove((j,col))
                 if j == 0:
                     self.open_cols.remove(col)
                 return True
@@ -304,12 +304,12 @@ class Board(object):
                     raise 'ERROR: tried to remove move from empty column'
                 else:
                     self.arr[j+1,col] = 0
-                    self.indices.append((j+1,col))
+                    # self.indices.append((j+1,col))
 
         if found == 0:
             self.arr[0,col] = 0
             self.open_cols.append(col)
-            self.indices.append((0,col))    
+            # self.indices.append((0,col))    
     
     def accessible_open_threes(self, player1):
         '''is there an open three that can be capitalized on in next move for player1? if there is, return the columns of those moves 
@@ -383,6 +383,9 @@ class Board(object):
 
     def utility_estimator(self,player1,player2,weight1, weight2):
         '''the estimator of the utility of the board state for player1'''
+        s1 = board.check_total_surrounders(player1)
+        s2 = board.check_total_surrounders(player2)
+        surrounders_factor = s1 - s2
         u1 = self.open_three_openings(player1)[:]
         u2 = self.open_three_openings(player2)[:]
 
@@ -404,7 +407,10 @@ class Board(object):
         stacks1 = len(self.stacked_open_threes(player1))
         stacks2 = len(self.stacked_open_threes(player2))
         ## weight the stacks higher than other open threes
-        return len(u1) + weight1*stacks1+weight2*open_rows_1 - (len(u2) + weight1*stacks2+weight2*open_rows_1)
+        threes_factor = len(u1) + weight1*stacks1+weight2*open_rows_1 - (len(u2) + weight1*stacks2+weight2*open_rows_1)
+        utility = surrounders_factor + threes_factor
+        return utility
+
 
 
 
