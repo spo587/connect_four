@@ -2,6 +2,7 @@ import random
 import copy
 import connectfour as cf
 from collections import defaultdict
+from pprint import pprint
 
 ## count, map, dir, reduce
 
@@ -128,8 +129,7 @@ def build_stacked_open_threes(player1,player2,board):
         newboard.remove_move(move)
     return potential_moves
 
-## wtf is going on with this ridiculous bug!!!!!!!!!!
-#and newboard.stacked_open_threes(player2)[-1][1] not in newboard.open_three_openings(player1):
+
 
 def avoid_stacked_open_threes_opp(player1,player2,board):
     stacks2 = len(board.stacked_open_threes(player2))
@@ -295,13 +295,13 @@ def comp_play_comp(strat1,strat2,team1=1,team2=2):
     for i in range(21):
         board.add_move(strat1(team1,team2,board,show_decision=True),team1)
         print 'number of moves so far: ', len(board.moves)
-        print board.arr
+        pprint(board.arr)
         if board.check_four_alternate(team1):
             print 'team 1 wins!!!!!'
             return 1
         board.add_move(strat2(team2,team1,board,show_decision=True),team2)
         print 'number of moves so far: ', len(board.moves)
-        print board.arr
+        pprint(board.arr)
         if board.check_four_alternate(team2):
             print 'team 2 wins!!!!'
             return -1

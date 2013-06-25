@@ -1,7 +1,5 @@
-import numpy as np
 import itertools
 import copy
-
         
 '''this file contains the board class, whose methods will be called in the strategies file cf_strats_redone. you can also
 play a two-player, human vs. human game in this file.'''
@@ -11,196 +9,90 @@ play a two-player, human vs. human game in this file.'''
 
 class Board(object):
     def __init__(self, player1, player2, height=6, width=7):
-        self.arr = np.zeros((6,7),dtype=int)
+        self.arr = [[0 for i in range(7)] for j in range(6)]
         self.open_cols = range(7)
         self.moves = []
         self.player1 = player1
         self.player2 = player2
         self.height = height
         self.width = width
-        self.all_indices = self.build_indices()
-        #self.indices = list(self.build_indices())
         self.available_fours = self.build_available_four_strings()
 
-    def build_indices(self):
-        '''makes a tuple of 42 tuples, each tuple is a board index'''
-        indices = ()
-        for j in range(6):
-            for i in range(7):
-                indices += ((j,i),)
-        return indices
+    def build_available_four_strings(self):
+        '''a list. each entry is a list of four indices making a possible connect four'''
+        fours = []
+        ## rows
+        for row in range(self.height):
+            for col in range(self.width - 3):
+                fours.append([(row, col+i) for i in range(4)])
+        ## columns
+        for row in range(self.height - 3):
+            for col in range(self.width):
+                fours.append([(row+i, col) for i in range(4)])
+        ## nw diagonals
+        for row in range(self.height - 3):
+            for col in range(self.width - 3):
+                fours.append([(row+i, col+i) for i in range(4)])
+        ## ne diagonals
+        for row in range(self.height - 3, self.height):
+            for col in range(self.width - 3):
+                fours.append([(row-i, col+i) for i in range(4)])
+        assert len(fours) == 69
+        return fours
+
+
+    def opposite_player(self, player):
+        if player == self.player1:
+            return self.player2
+        else:
+            return self.player1
 
     def surrounders(self, player, index):
         '''key method to the surrounders strategy. checks branches in all directions for potential 4's in a row for the given player
         and the given index'''
-        a = 0
-        i,j = index
-        ## how many rows below, above, and columns below and above are there?
-        spare_rows_down = self.height - i - 1
-        spare_columns_right = self.width - j - 1
-        spare_rows_up = i
-        spare_columns_left = j
-        ## for checking diagonals, can't go too far or will raise an index error in the array
-        spare1 = min(spare_rows_down,spare_columns_right)
-        spare2 = min(spare_rows_up,spare_columns_left)
-        spare3 =  min(spare_rows_up,spare_columns_right)
-        spare4 = min(spare_rows_down,spare_columns_left)
-        ##check diagonals
-        ## down, right  
-        local = 0
-        for s in range(1,spare1+1):
-            if self.arr[i+s,j+s] in [0,player]:
-                local += 1
-            else:
-                break
-        downright = min(local,4)
-        ## up, left
-        local = 0
-        for s in range(-1,-spare2-1,-1):
-          
-            if self.arr[i+s,j+s] in [0,player]:
-                local += 1
-            else:
-                break
-        upleft = min(local,4)
-        ## d, on't count the square as its own surrounder
-        ##upright
-        local = 0
-        for s in range(1,spare3+1):
-            
-            if self.arr[i-s,j+s] in [player,0]: 
-                local += 1
-            else:
-  
-                break
-        upright = min(local,4)
-        ## down, left
-        local = 0
-        for s in range(0,-spare4,-1):
-            
-            if self.arr[i-s,j+s] in [player,0]: 
-                local += 1
-            else:
-                print local
-                break
-        downleft = min(local,4)
-        ##up
-        ## not adding this for now
-        #up = min(i,4)
-        ## down
-        local = 0
-        for s in range(i+1,self.height):
-            if self.arr[s,j] == player:
-                local += 1
-            else:
-                break
-        down = local
-        ## left right
-        ## right
-        local = 0
-        for s in range(1,spare_columns_right+1):
-            
-            if self.arr[i,j+s] == player or self.arr[i,j+s] == 0:
-                local += 1
-            else:
 
-                break
-        right = min(local,4)
-        ## left
-        local = 0
-        for s in range(1,spare_columns_left+1):
-            
-            if self.arr[i,j-s] == player or self.arr[i,j-s] == 0:
-                local += 1
-            else:
+        opponent = self.opposite_player(player)
+        adjacent_fours = self.available_fours_at(index)
 
-                break
-        left = min(local,4)
-        total = 0
-        if right +  left >= 3:
-            total += right + left
-        if upleft + downright  >= 3:
-            total += upleft + downright
-        ## let's not up the up/down component    
-        # if up + down >= 3:
-        #     total += up + down
-        if upright + downleft >= 3:
-            total += upright + downleft
-        return total
-    def build_available_four_strings(self):
-        '''a list. each entry is a list of four indices making a possible connect four'''
-        l = []
-        for i in range(69):
-            l.append([])
-        ## rows
-        r = 0
-        iters = 0
-        while r <= 5:
-            c = 0
-            while c <= 3:
-                for i in range(4):
-                    l[iters].append((r,c+i))
-                iters += 1
-                c += 1
-            r += 1
-        ## columns
-        c = 0
-        while c <= 6:
-            r = 0
-            while r <= 2:
-                for i in range(4):
-                    l[iters].append((r+i,c))
-                iters += 1
-                r += 1
-            c += 1
-        ## nw diagonals
-        r = 2
-        while r >= 0:
-            c = 0
-            while c <= 3:
-                for i in range(4):
-                    l[iters].append((r+i,c+i))
-                iters += 1
-                c += 1
-            r -= 1
-        ## ne diagonals
-        r = 2
-        while r >= 0:
-            c = 6
-            while c >= 3:
-                for i in range(4):
-                    l[iters].append((r+i,c-i))
-                iters += 1
-                c -= 1
-            r -= 1
-        return l
+        unoccupied_fours = adjacent_fours[:]
+        for line in adjacent_fours:
+            for i, j in line:
+                if self.arr[i][j] == opponent:
+                    unoccupied_fours.remove(line)
+        # no_opponent_fours = [line for line in adjacent_fours if not any([self.arr[i][j] == opponent for i,j in line])]
+
+        def add(x, y):
+            return x + y
+
+        squares = reduce(add, unoccupied_fours)
+        unique_squares = set(squares)
+        return len(unique_squares) - 1
+
+    def available_fours_at(self, index):
+        return [line for line in self.available_fours if index in line]
+
+
     def check_four_alternate(self,player):
         '''checks the board for four in a row for the given player'''
         for entry in self.available_fours:
-            temp_list = []
-            for tup in entry:
-                temp_list.append(self.arr[tup[0],tup[1]])
-            if temp_list == [player,player,player,player]:
-                return True
+            four_list = [self.arr[i][j] for i, j in entry]
+            s = set(four_list)
+            if len(s) == 1 and s.pop() == player:
+                    return True
         return False
+
+
     def check_open_three(self,player):
         '''a list of open threes for the given player. each element of the list is the list of four indices
         corresponding to the available three'''
         l = []
         for entry in self.available_fours:
-            temp_list = []
-            for tup in entry:
-                temp_list.append(self.arr[tup[0],tup[1]])
-            total = 0
-            for num in temp_list:
-                if num != player and num != 0:
-                    total = 0
-                    break
-                elif num == player:
-                    total += 1
-            if total == 3:
+            four_list = [self.arr[i][j] for i, j in entry]
+            if four_list.count(player) == 3 and four_list.count(0) == 1:
                 l.append(entry)
         return l
+
+
     def check_open_three_nonvertical(self,player):
         '''a list of open threes, not including verticals, since they're useless'''
         l = self.check_open_three(player)
@@ -219,7 +111,7 @@ class Board(object):
         l2 = self.check_open_three_nonvertical(player)
         for l in l2:
             for tup in l:
-                if self.arr[tup[0],tup[1]] == 0:
+                if self.arr[tup[0]][tup[1]] == 0:
                     l1.append((tup[1],tup[0]))
         l = []
         for i in range(len(l1)-1):
@@ -250,11 +142,11 @@ class Board(object):
     def check_move_win(self,col,player):
         '''will a move in the specified col for the player end the game?''' 
         for j in range(5,-1,-1):
-            if self.arr[j,col] == 0:
-                self.arr[j,col] = player
+            if self.arr[j][col] == 0:
+                self.arr[j][col] = player
                 
                 value = self.check_four_alternate(player)
-                self.arr[j,col] = 0
+                self.arr[j][col] = 0
                 return value
         return False
 
@@ -262,34 +154,31 @@ class Board(object):
         '''what is the surrounders value of a move to the specified column?'''
         list_indices = []
         for j in range(5,-1,-1):
-            if self.arr[j,col] == 0:
-                self.arr[j,col] = player
+            if self.arr[j][col] == 0:
+                self.arr[j][col] = player
                 value = self.surrounders(player,(j,col))
-                self.arr[j,col] = 0
+                self.arr[j][col] = 0
                 return value
      
     def check_total_surrounders(self,player):
         total = 0
-        for index in self.all_indices:
-            if self.arr[index] == player:
-                total += self.surrounders(player,index)
+        for row in range(self.height):
+            for col in range(self.width):
+                if self.arr[row][col] == player:
+                    total += self.surrounders(player,index)
         return total
 
     def add_move(self,col,player,toPrint=False):
         '''adds a move to the board for the given player in the given column'''
-        #if toPrint:
-            #print self.indices
-        if self.arr[0:5,col].all() != 0:
+        full_column = all([self.arr[row][col] for row in range(self.height)])
+        if full_column:
             return False
         for j in range(5,-1,-1):
             if toPrint:
                 print (j,col)
-            if self.arr[j,col] == 0:
-                self.arr[j,col] = player
+            if self.arr[j][col] == 0:
+                self.arr[j][col] = player
                 self.moves.append(col)
-                if toPrint:
-                    print 'index to be removed', (j,col)
-                # self.indices.remove((j,col))
                 if j == 0:
                     self.open_cols.remove(col)
                 return True
@@ -298,19 +187,18 @@ class Board(object):
         '''takes the move off the board. will be called when the AI looks moves ahead'''
         found = 0
         for j in range(5,-1,-1):
-            if self.arr[j,col] == 0:
+            if self.arr[j][col] == 0:
                 found += 1
                 if j == 5:
                     raise 'ERROR: tried to remove move from empty column'
                 else:
-                    self.arr[j+1,col] = 0
-                    # self.indices.append((j+1,col))
+                    self.arr[j+1][col] = 0
+
 
         if found == 0:
-            self.arr[0,col] = 0
+            self.arr[0][col] = 0
             self.open_cols.append(col)
-            # self.indices.append((0,col))    
-    
+
     def accessible_open_threes(self, player1):
         '''is there an open three that can be capitalized on in next move for player1? if there is, return the columns of those moves 
         in a list '''
@@ -407,22 +295,14 @@ class Board(object):
         stacks1 = len(self.stacked_open_threes(player1))
         stacks2 = len(self.stacked_open_threes(player2))
         ## weight the stacks higher than other open threes
+
         threes_factor = len(u1) + weight1*stacks1+weight2*open_rows_1 - (len(u2) + weight1*stacks2+weight2*open_rows_1)
         utility = surrounders_factor + threes_factor
         return utility
 
 
-
-
-
-
-    # def no_gos(self,player1,player2):
-    #     '''columns player1 cannot move to without subsequently losing'''
-    #     newboard = copy.deepcopy(self)
-    #     for col in newboard.open_cols:
-
-
   
+
     
     
 def play_game_manual(player1=1, player2=2, board=Board(1,2)):
