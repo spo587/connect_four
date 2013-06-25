@@ -218,12 +218,12 @@ def utility_function(player1,player2,board,l,weight):
     return final_list
 
 
-def strat(player1,player2,board, show_decisions=False):
-	first_cut = minimum(player1,player2,board)
-	if len(first_cut) == 0:
-		print 'minimum function fails to avoid defeat'
-		return random.choice(board.open_cols)
-	elif len(first_cut) == 1:
+def strat(player1,player2,board, show_decision=False):
+    first_cut = minimum(player1,player2,board)
+    if len(first_cut) == 0:
+        print 'minimum function fails to avoid defeat'
+        return random.choice(board.open_cols)
+    elif len(first_cut) == 1:
 		print 'move determined by minimum function'
 		return first_cut[0]
     if show_decision:
@@ -271,7 +271,7 @@ def strat(player1,player2,board, show_decisions=False):
 	elif len(eight_cut) == 1:
 		print 'move determined to avoid an open row of three for opponent'
 		return eight_cut[0]
-	if show_decisions:
+	if show_decision:
 		print 'first cut ', first_cut
 		print 'second_cut ', second_cut
 		print 'third_cut ', third_cut
@@ -291,7 +291,7 @@ player2 = cf.Player(2)
 
 def play_game_1_player_comp_leads(strat=strat, team1=player1, team2=player2, board=cf.Board(player1,player2)):
     for i in range(21):
-        board.add_move(strat(team2,team1,board,show_decisions=True),team2)
+        board.add_move(strat(team2,team1,board,show_decision=True),team2)
         print board.arr
         if board.check_four_alternate(team2):
             print 'computer wins!!!!!'

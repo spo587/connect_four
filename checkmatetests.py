@@ -102,6 +102,7 @@ print b.arr
 print player1.indices
 print player2.indices
 print b.check_total_surrounders(player1)
+print b.utility_estimator(player1)
 print strat(player1)
 
 #print b.stacked_open_threes(1)
