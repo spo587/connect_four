@@ -145,6 +145,8 @@ class Board(object):
                 fours.append([(row-i, col+i) for i in range(4)])
         assert len(fours) == 69
         return fours
+
+
     def check_four_alternate(self,player):
         '''checks the board for four in a row for the given player'''
         for entry in self.available_fours:
@@ -154,6 +156,8 @@ class Board(object):
             if temp_list == [player,player,player,player]:
                 return True
         return False
+
+
     def check_open_three(self,player):
         '''a list of open threes for the given player. each element of the list is the list of four indices
         corresponding to the available three'''
@@ -172,6 +176,8 @@ class Board(object):
             if total == 3:
                 l.append(entry)
         return l
+
+
     def check_open_three_nonvertical(self,player):
         '''a list of open threes, not including verticals, since they're useless'''
         l = self.check_open_three(player)
@@ -371,18 +377,6 @@ class Board(object):
         stacks2 = len(self.stacked_open_threes(player2))
         ## weight the stacks higher than other open threes
         return len(u1) + weight1*stacks1+weight2*open_rows_1 - (len(u2) + weight1*stacks2+weight2*open_rows_1)
-
-
-
-
-
-    # def no_gos(self,player1,player2):
-    #     '''columns player1 cannot move to without subsequently losing'''
-    #     newboard = copy.deepcopy(self)
-    #     for col in newboard.open_cols:
-
-
-  
     
     
 def play_game_manual(player1=1, player2=2, board=Board(1,2)):
