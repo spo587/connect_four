@@ -288,7 +288,23 @@ def strat(player1,player2,board, show_decision=False):
 ## change
 #def strat_utility
 
-
+def comp_play_comp(strat1,strat2,team1=1,team2=2):
+    board = cf.Board(team1,team2)
+    for i in range(21):
+        board.add_move(strat1(team1,team2,board,show_decision=True),team1)
+        print 'number of moves so far: ', len(board.moves)
+        print board.arr
+        if board.check_four_alternate(team1):
+            print 'team 1 wins!!!!!'
+            return 1
+        board.add_move(strat2(team2,team1,board,show_decision=True),team2)
+        print 'number of moves so far: ', len(board.moves)
+        print board.arr
+        if board.check_four_alternate(team2):
+            print 'team 2 wins!!!!'
+            return -1
+    print 'it\'s a draw!!!!'
+    return 0
 
 
 def play_game_1_player_comp_leads(strat=strat, team1=1, team2=2, board=cf.Board(1,2)):
@@ -311,9 +327,9 @@ def play_game_1_player_comp_leads(strat=strat, team1=1, team2=2, board=cf.Board(
     print 'its a draw!!!!!'
 #### changed!!!!
 if __name__ == '__main__':
-    play_game_1_player_comp_leads()
+    #play_game_1_player_comp_leads()
     #play_game_1_player_human_leads()
-    #comp_play_comp()
+    comp_play_comp(strat,strat)
     #print multiple_games_computer(4,8,16)
     #print which_strat_simulation(1)
 
