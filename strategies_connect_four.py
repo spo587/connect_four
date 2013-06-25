@@ -31,28 +31,30 @@ def minimum(comp,human,board):
     return None
 
 def better_min(player1,player2,board,toPrint=False):
-    minmove = minimum(comp,human,board)
+    '''returns list of moves that won't immediately result in losing the game'''
+    minmove = minimum(player1,player2,board)
     if minmove != None:
-        return minmove
+        return [minmove]
     else:      
         newboard = copy.deepcopy(board)
         l = newboard.open_cols[:]  
         #print l
-        list_moves_to_remove = []
+        list_moves = []
         hypotheticals = [0,0,0]
         for col in l:
             hypotheticals[0] = col
-            newboard.add_move(col, comp)
+            newboard.add_move(col, player1)
             if toPrint:
                 print 'where are we in the tree?  ', hypotheticals
                 print 'hypothetical board, 1 move ahead'
                 print newboard.arr
-            if newboard.check_move_win(col, human):
-                list_moves_to_remove.append(col)
-        if len(list_moves_to_remove) > 0:
-            for col in list_moves_to_remove:
-                l.remove(col)
-        return l
+            if newboard.check_move_win(col, player2) is False:
+                list_moves.append(col)
+        if len(list_moves) > 0:
+            return list_moves
+        else:
+            print 'no moves will not immediately result in a defeat'
+            return l
 
 
 
@@ -68,7 +70,7 @@ def better1(comp,human,board, toPrint=False):
         return minmove
     else:      
         newboard = copy.deepcopy(board)
-        l = newboard.open_cols[:]  
+        l = better_min(comp,human,board)[:]  
         #print l
         list_moves_to_remove = []
         hypotheticals = [0,0,0]
@@ -79,7 +81,10 @@ def better1(comp,human,board, toPrint=False):
                 print 'where are we in the tree?  ', hypotheticals
                 print 'hypothetical board, 1 move ahead'
                 print newboard.arr
-            if newboard.check_move_win(col, human):
+            ## does the new move make  
+            if newboard.accessible_open_threes(comp) > 1 and newboard.check_move_win(col) is False:
+                    return col
+            elif newboard.check_move_win(col, human):
                 list_moves_to_remove.append(col)    
             ## if not, test whether the next move by other player could be a checkmate. if so, add it to list of moves to be removed
             else:
@@ -132,7 +137,35 @@ def better1(comp,human,board, toPrint=False):
             return random.choice(board.open_cols) 
         return l
           
-    
+def better3(player1,player2,board,toPrint=False):
+    '''returns minmove if there is one. returns a checkmate move is there is one. otherwise returns a list of moves that will not immediately
+    result in checkmate for the other player'''
+    minmove = minimum(player1,player2,board)
+    if minmove != None:
+        #print 'move returned by minimum function ', minmove  
+        return minmove
+    else:
+        move = board.checkmate_moves(player1,player2)
+        if move is not False:
+            return move
+        else:
+            list_moves_to_remove = []
+            newboard = copy.deepcopy(board)
+            l = better_min(player1,player2,board)[:]
+            for col in l:
+                newboard.add_move(col,player1)
+                if newboard.checkmate_moves(player2,player1) is not False:
+                    list_moves_to_remove.append(col)
+                newboard.remove_move(col)
+            for item in list_moves_to_remove:
+                l.remove(item)
+            if len(l) > 0:
+                return l
+            else:
+                print 'game must be lost, returning whole list'
+
+
+
 def better2(comp,human,board, toPrint=False):
     '''returns minimum move if there is one. otherwise, eliminates moves by first
     eliminating any move that will directly result in a win for opp, then by eliminating
@@ -215,7 +248,34 @@ def surrounders_builder(player1,player2,board):
     print 'final potential moves list determined by surrounders function ', final_list
     return final_list
                 
-def surrounders_initial_better(comp,human,board):
+def surrounders_initial_better3(comp,human,board):
+    '''implements the better strategy above, and if the list returned is length 2 or more,
+    checks each potential move in the list for the number of 'surrounders', defined in connectfour file''' 
+    potential_moves = better3(comp,human,board)
+
+    if type(potential_moves) == int:  ## only one potential move identified in better() above
+        print 'move determined by previous function ',potential_moves
+        return potential_moves
+    else:
+        newboard = copy.deepcopy(board)
+        l = potential_moves
+        dictionary_of_moves = {}
+        for move in l:
+            dictionary_of_moves[move] = 0   
+        for col in dictionary_of_moves.keys():
+
+            value = newboard.check_move_surrounders(col,comp)
+            dictionary_of_moves[col] = value
+    print dictionary_of_moves
+    final_list = []
+    ## find the dictionary value with the maximum score and put it in the list
+    for col in dictionary_of_moves.keys():
+        if dictionary_of_moves[col] == max(dictionary_of_moves.values()):
+            final_list.append(col)
+    print 'final potential moves list determined by surrounders function ', final_list
+    return final_list
+
+def surrounders_initial_better1(comp,human,board):
     '''implements the better strategy above, and if the list returned is length 2 or more,
     checks each potential move in the list for the number of 'surrounders', defined in connectfour file''' 
     potential_moves = better1(comp,human,board)
@@ -242,35 +302,8 @@ def surrounders_initial_better(comp,human,board):
     print 'final potential moves list determined by surrounders function ', final_list
     return final_list
 
-def surrounders_initial_better2(comp,human,board):
-    '''implements the better strategy above, and if the list returned is length 2 or more,
-    checks each potential move in the list for the number of 'surrounders', defined in connectfour file''' 
-    potential_moves = better2(comp,human,board)
-
-    if type(potential_moves) == int:  ## only one potential move identified in better() above
-        print 'move determined by previous function ',potential_moves
-        return potential_moves
-    else:
-        newboard = copy.deepcopy(board)
-        l = potential_moves
-        dictionary_of_moves = {}
-        for move in l:
-            dictionary_of_moves[move] = 0   
-        for col in dictionary_of_moves.keys():
-
-            value = newboard.check_move_surrounders(col,comp)
-            dictionary_of_moves[col] = value
-    print dictionary_of_moves
-    final_list = []
-    ## find the dictionary value with the maximum score and put it in the list
-    for col in dictionary_of_moves.keys():
-        if dictionary_of_moves[col] == max(dictionary_of_moves.values()):
-            final_list.append(col)
-    print 'final potential moves list determined by surrounders function ', final_list
-    return final_list
-
 def surrounders_random_1(comp,human,board):
-    unique_surrounders_move = surrounders_initial_better(comp,human,board)
+    unique_surrounders_move = surrounders_initial_better1(comp,human,board)
     if type(unique_surrounders_move) == int:
         return unique_surrounders_move
     else:
@@ -279,8 +312,8 @@ def surrounders_random_1(comp,human,board):
         print final_move
         return final_move  
 
-def surrounders_random_2(comp,human,board):
-    unique_surrounders_move = surrounders_initial_better2(comp,human,board)
+def surrounders_random_3(comp,human,board):
+    unique_surrounders_move = surrounders_initial_better3(comp,human,board)
     if type(unique_surrounders_move) == int:
         return unique_surrounders_move
     else:
@@ -356,11 +389,11 @@ def play_game_1_player_human_leads(strat=surrounders_random_1, team1=1, team2=2,
             return 
     print 'it\'s a draw!!!!!' 
  
-def play_game_1_player_comp_leads(strat=surrounders_random_2, team1=1, team2=2, board=cf.Board(1,2)):
+def play_game_1_player_comp_leads(strat=surrounders_random_3, team1=1, team2=2, board=cf.Board(1,2)):
     for i in range(21):
         board.add_move(strat(team2,team1,board),team2)
         print board.arr
-        if board.check_four(team2):
+        if board.check_four_alternate(team2):
             print 'computer wins!!!!!'
             return 
         elif board.accessible_open_threes(team2):
@@ -368,7 +401,7 @@ def play_game_1_player_comp_leads(strat=surrounders_random_2, team1=1, team2=2, 
         if not board.add_move(int(raw_input('team 1, your move, plz:  ')),team1):
             board.add_move(int(raw_input('team 1, your move, plz:  ')),team1)
         print board.arr
-        if board.check_four(team1):
+        if board.check_four_alternate(team1):
             print 'human wins!!!!!'
             return  
         elif board.accessible_open_threes(team1):
@@ -376,22 +409,22 @@ def play_game_1_player_comp_leads(strat=surrounders_random_2, team1=1, team2=2, 
     print 'its a draw!!!!!'
         
      
-def comp_play_comp(strat1=surrounders_random_2,strat2=surrounders_random_1,team1=1,team2=2):
+def comp_play_comp(strat1=surrounders_random_3,strat2=surrounders_random_1,team1=1,team2=2):
     board = cf.Board(team1,team2)
     for i in range(21):
         board.add_move(strat1(team1,team2,board),team1)
         print board.arr
-        if board.check_four(team1):
+        if board.check_four_alternate(team1):
             print 'team 1 wins!!!!!'
             return 1
         board.add_move(strat2(team2,team1,board),team2)
         print board.arr
-        if board.check_four(team2):
+        if board.check_four_alternate(team2):
             print 'team 2 wins!!!!'
             return -1
     print 'it\'s a draw!!!!'
 
-def multiple_games_computer(num, strat1=surrounders_outer, strat2=surrounders_inner):
+def multiple_games_computer(num, strat1=surrounders_random_3, strat2=surrounders_random_3):
     result = 0
     for i in range(num):
         result += comp_play_comp(strat1, strat2)
@@ -402,9 +435,9 @@ def multiple_games_computer(num, strat1=surrounders_outer, strat2=surrounders_in
     
  
 if __name__ == '__main__': 
-    #play_game_1_player_comp_leads()
-    comp_play_comp()
-    #print multiple_games_computer(2)           
+    play_game_1_player_comp_leads()
+    # comp_play_comp()
+    # print multiple_games_computer(2)           
     
     #computer_play_computer()
     
