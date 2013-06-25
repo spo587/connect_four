@@ -19,7 +19,6 @@ class Board(object):
         self.height = height
         self.width = width
         self.all_indices = self.build_indices()
-        self.indices = list(self.build_indices())
         self.available_fours = self.build_available_four_strings()
 
     def build_indices(self):
@@ -277,8 +276,6 @@ class Board(object):
 
     def add_move(self,col,player,toPrint=False):
         '''adds a move to the board for the given player in the given column'''
-        #if toPrint:
-            #print self.indices
         if self.arr[0:5,col].all() != 0:
             return False
         for j in range(5,-1,-1):
@@ -287,9 +284,6 @@ class Board(object):
             if self.arr[j,col] == 0:
                 self.arr[j,col] = player
                 self.moves.append(col)
-                if toPrint:
-                    print 'index to be removed', (j,col)
-                self.indices.remove((j,col))
                 if j == 0:
                     self.open_cols.remove(col)
                 return True
@@ -304,12 +298,10 @@ class Board(object):
                     raise 'ERROR: tried to remove move from empty column'
                 else:
                     self.arr[j+1,col] = 0
-                    self.indices.append((j+1,col))
 
         if found == 0:
             self.arr[0,col] = 0
             self.open_cols.append(col)
-            self.indices.append((0,col))    
     
     def accessible_open_threes(self, player1):
         '''is there an open three that can be capitalized on in next move for player1? if there is, return the columns of those moves 
