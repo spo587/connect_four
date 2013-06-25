@@ -286,6 +286,7 @@ class Board(object):
                 return move
         return False
 
+
     def utility_estimator(self,player1,player2,weight_center, weight_stacks,weight_open_rows,toPrint=False):
         '''the estimator of the utility of the board state for player1'''
         center_score = 0
