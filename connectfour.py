@@ -16,16 +16,7 @@ class Board(object):
         self.player2 = player2
         self.height = height
         self.width = width
-        self.all_indices = self.build_indices()
         self.available_fours = self.build_available_four_strings()
-
-    def build_indices(self):
-        '''makes a tuple of 42 tuples, each tuple is a board index'''
-        indices = ()
-        for j in range(6):
-            for i in range(7):
-                indices += ((j,i),)
-        return indices
 
     def opposite_player(self, player):
         if player == self.player1:
@@ -180,10 +171,10 @@ class Board(object):
      
     def check_total_surrounders(self,player):
         total = 0
-        for index in self.all_indices:
-            i, j = index
-            if self.arr[i][j] == player:
-                total += self.surrounders(player,index)
+        for row in range(self.height):
+            for col in range(self.width):
+                if self.arr[row][col] == player:
+                    total += self.surrounders(player,index)
         return total
 
     def add_move(self,col,player,toPrint=False):
