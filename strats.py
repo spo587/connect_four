@@ -126,8 +126,7 @@ def build_stacked_open_threes(player1,player2,board):
         newboard.remove_move(move)
     return potential_moves
 
-## wtf is going on with this ridiculous bug!!!!!!!!!!
-#and newboard.stacked_open_threes(player2)[-1][1] not in newboard.open_three_openings(player1):
+
 
 def avoid_stacked_open_threes_opp(player1,player2,board):
     stacks2 = len(board.stacked_open_threes(player2))
