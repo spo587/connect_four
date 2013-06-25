@@ -18,6 +18,29 @@ class Board(object):
         self.width = width
         self.available_fours = self.build_available_four_strings()
 
+    def build_available_four_strings(self):
+        '''a list. each entry is a list of four indices making a possible connect four'''
+        fours = []
+        ## rows
+        for row in range(self.height):
+            for col in range(self.width - 3):
+                fours.append([(row, col+i) for i in range(4)])
+        ## columns
+        for row in range(self.height - 3):
+            for col in range(self.width):
+                fours.append([(row+i, col) for i in range(4)])
+        ## nw diagonals
+        for row in range(self.height - 3):
+            for col in range(self.width - 3):
+                fours.append([(row+i, col+i) for i in range(4)])
+        ## ne diagonals
+        for row in range(self.height - 3, self.height):
+            for col in range(self.width - 3):
+                fours.append([(row-i, col+i) for i in range(4)])
+        assert len(fours) == 69
+        return fours
+
+
     def opposite_player(self, player):
         if player == self.player1:
             return self.player2
@@ -47,28 +70,6 @@ class Board(object):
 
     def available_fours_at(self, index):
         return [line for line in self.available_fours if index in line]
-
-    def build_available_four_strings(self):
-        '''a list. each entry is a list of four indices making a possible connect four'''
-        fours = []
-        ## rows
-        for row in range(self.height):
-            for col in range(self.width - 3):
-                fours.append([(row, col+i) for i in range(4)])
-        ## columns
-        for row in range(self.height - 3):
-            for col in range(self.width):
-                fours.append([(row+i, col) for i in range(4)])
-        ## nw diagonals
-        for row in range(self.height - 3):
-            for col in range(self.width - 3):
-                fours.append([(row+i, col+i) for i in range(4)])
-        ## ne diagonals
-        for row in range(self.height - 3, self.height):
-            for col in range(self.width - 3):
-                fours.append([(row-i, col+i) for i in range(4)])
-        assert len(fours) == 69
-        return fours
 
 
     def check_four_alternate(self,player):
