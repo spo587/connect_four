@@ -52,13 +52,13 @@ def test_betters(numtrials):
 
 
 
-player1 = cf.Player(1)
-player2 = cf.Player(2)
-b = cf.Board(player1,player2)
+# player1 = cf.Player(1)
+# player2 = cf.Player(2)
+b = cf.Board(1,2)
 
-b.add_move(5,player2)
+b.add_move(5,2)
 
-b.add_move(4,player1)
+b.add_move(4,1)
 
 # player1.make_move(4,b)
 # b.add_move(4,1)
@@ -99,10 +99,8 @@ b.add_move(4,player1)
 
 
 print b.arr
-print player1.indices
-print player2.indices
-print b.check_total_surrounders(player1)
-print strat(player1)
+print b.check_total_surrounders(1)
+#print strat(player1)
 
 #print b.stacked_open_threes(1)
 #print scf.avoid_stacked_open_threes_opp(2,1,b)

@@ -270,9 +270,10 @@ class Board(object):
      
     def check_total_surrounders(self,player):
         total = 0
-        for index in player.indices:
-            total += self.surrounders(player,index)
-            return total
+        for index in self.all_indices:
+            if self.arr[index] == player:
+                total += self.surrounders(player,index)
+        return total
 
     def add_move(self,col,player,toPrint=False):
         '''adds a move to the board for the given player in the given column'''
