@@ -221,67 +221,69 @@ def utility_function(player1,player2,board,l,weight):
 def strat(player1,player2,board, show_decision=False):
     first_cut = minimum(player1,player2,board)
     if len(first_cut) == 0:
+
         print 'minimum function fails to avoid defeat'
         return random.choice(board.open_cols)
     elif len(first_cut) == 1:
-		print 'move determined by minimum function'
-		return first_cut[0]
+        print 'move determined by minimum function'
+        return first_cut[0]
     if show_decision:
-        print 'past first cut'
-	second_cut = next_min(player1,player2,board)
-	if len(second_cut) == 1:
-		print 'move determined by next min function'
-		return second_cut[0]
+        print 'past first cut ', first_cut
+    second_cut = next_min(player1,player2,board)
+    if len(second_cut) == 1:
+        print 'move determined by next min function'
+        return second_cut[0]
     if show_decision:
-        print 'past second cut'
-	third_cut = avoid_checkmate(player1,player2,board)
-	if len(third_cut) == 0:
-		print 'no move avoids checkmate'
-		return random.choice(board.open_cols)
-	if len(third_cut) == 1:
-		print 'move determined by checkmate function'
-		return third_cut[0]
+        print 'past second cut ', second_cut
+    third_cut = avoid_checkmate(player1,player2,board)
+    if len(third_cut) == 0:
+        print 'no move avoids checkmate'
+        return random.choice(board.open_cols)
+    if len(third_cut) == 1:
+        print 'move determined by checkmate function'
+        return third_cut[0]
     if show_decision:
-        print 'past third  cut'
-	fourth_cut = [item for item in third_cut if item in gos(player1,player2,board)]
-	if len(fourth_cut) > 0:
-		print 'move determined by gos function combined with avoid checkmate function'
-		return random.choice(fourth_cut)
+        print 'past third  cut ', third_cut
+    fourth_cut = [item for item in third_cut if item in gos(player1,player2,board)]
+    if len(fourth_cut) > 0:
+        print 'move determined by gos function combined with avoid checkmate function'
+        return random.choice(fourth_cut)
     if show_decision:
-        print 'past fourth cut'
-	fifth_cut = [item for item in third_cut if item in no_gos(player1,player2,board)]
-	if len(fifth_cut) == 0:
-		fifth_cut = third_cut
-	elif len(fifth_cut) == 1:
-		print 'move determined to avoid checkmate but not move in a no-go column'
-		return fifth_cut[0]
-	sixth_cut = [item for item in fifth_cut if item in build_stacked_open_threes(player1,player2,board)]
-	if len(sixth_cut) > 0:
-		print 'move determined to build a stack'
-		return random.choice(sixth_cut)
-	seventh_cut = [item for item in fifth_cut if item in avoid_stacked_open_threes_opp(player1,player2,board)]
-	if len(seventh_cut) == 1:
-		print 'move determined to avoid an opponents stack'
-		return seventh_cut[0]
-	elif len(seventh_cut) == 0:
-		seventh_cut = fifth_cut
-	eight_cut = [item for item in seventh_cut if item in avoid_three_in_open_row(player1,player2,board)]
-	if len(eight_cut) == 0:
-		eight_cut = seventh_cut
-	elif len(eight_cut) == 1:
-		print 'move determined to avoid an open row of three for opponent'
-		return eight_cut[0]
-	if show_decision:
-		print 'first cut ', first_cut
-		print 'second_cut ', second_cut
-		print 'third_cut ', third_cut
-		print 'fourth_cut ', fourth_cut
-		print 'fifth_cut ', fifth_cut
-		print 'sixth_cut ', sixth_cut
-		print 'seventh_cut ', seventh_cut
-		print 'eight_cut ', eight_cut 
+        print 'past fourth cut ', fourth_cut
+    fifth_cut = [item for item in third_cut if item in no_gos(player1,player2,board)]
+    if len(fifth_cut) == 0:
+        fifth_cut = third_cut
+    elif len(fifth_cut) == 1:
+        print 'move determined to avoid checkmate but not move in a no-go column'
+        return fifth_cut[0]
+    if show_decision:
+        print 'past fifth cut ', fifth_cut
+    sixth_cut = [item for item in fifth_cut if item in build_stacked_open_threes(player1,player2,board)]
+    if len(sixth_cut) > 0:
+        print 'move determined to build a stack'
+        return random.choice(sixth_cut)
+    if show_decision:
+        print 'past 6th cut ', sixth_cut
 
-	return random.choice(eight_cut)
+    seventh_cut = [item for item in fifth_cut if item in avoid_stacked_open_threes_opp(player1,player2,board)]
+    if len(seventh_cut) == 1:
+        print 'move determined to avoid an opponents stack'
+        return seventh_cut[0]
+    elif len(seventh_cut) == 0:
+        seventh_cut = fifth_cut
+    if show_decision:
+        print 'past 7th cut ', seventh_cut
+    eight_cut = [item for item in seventh_cut if item in avoid_three_in_open_row(player1,player2,board)]
+    if len(eight_cut) == 0:
+        eight_cut = seventh_cut
+    elif len(eight_cut) == 1:
+        print 'move determined to avoid an open row of three for opponent'
+        return eight_cut[0]
+    if show_decision:
+
+        print 'eight_cut ', eight_cut
+
+    return random.choice(eight_cut)
 
 #def strat_utility
 
