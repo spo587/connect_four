@@ -2,6 +2,7 @@ import random
 import copy
 import connectfour as cf
 from collections import defaultdict
+from pprint import pprint
 
 '''this file contains the computer's strategies that will be implemented. the functions are stacked on top of each other, starting
 with a minimum function. each function returns a list, and the more complex functions call the previous functions in building their own
@@ -292,13 +293,13 @@ def comp_play_comp(strat1,strat2,team1=1,team2=2):
     for i in range(21):
         board.add_move(strat1(team1,team2,board,show_decision=True),team1)
         print 'number of moves so far: ', len(board.moves)
-        print board.arr
+        pprint(board.arr)
         if board.check_four_alternate(team1):
             print 'team 1 wins!!!!!'
             return 1
         board.add_move(strat2(team2,team1,board,show_decision=True),team2)
         print 'number of moves so far: ', len(board.moves)
-        print board.arr
+        pprint(board.arr)
         if board.check_four_alternate(team2):
             print 'team 2 wins!!!!'
             return -1
