@@ -126,51 +126,25 @@ class Board(object):
         return total
     def build_available_four_strings(self):
         '''a list. each entry is a list of four indices making a possible connect four'''
-        l = []
-        for i in range(69):
-            l.append([])
+        fours = []
         ## rows
-        r = 0
-        iters = 0
-        while r <= 5:
-            c = 0
-            while c <= 3:
-                for i in range(4):
-                    l[iters].append((r,c+i))
-                iters += 1
-                c += 1
-            r += 1
+        for row in range(self.height):
+            for col in range(self.width - 3):
+                fours.append([(row, col+i) for i in range(4)])
         ## columns
-        c = 0
-        while c <= 6:
-            r = 0
-            while r <= 2:
-                for i in range(4):
-                    l[iters].append((r+i,c))
-                iters += 1
-                r += 1
-            c += 1
+        for row in range(self.height - 3):
+            for col in range(self.width):
+                fours.append([(row+i, col) for i in range(4)])
         ## nw diagonals
-        r = 2
-        while r >= 0:
-            c = 0
-            while c <= 3:
-                for i in range(4):
-                    l[iters].append((r+i,c+i))
-                iters += 1
-                c += 1
-            r -= 1
+        for row in range(self.height - 3):
+            for col in range(self.width - 3):
+                fours.append([(row+i, col+i) for i in range(4)])
         ## ne diagonals
-        r = 2
-        while r >= 0:
-            c = 6
-            while c >= 3:
-                for i in range(4):
-                    l[iters].append((r+i,c-i))
-                iters += 1
-                c -= 1
-            r -= 1
-        return l
+        for row in range(self.height - 3, self.height):
+            for col in range(self.width - 3):
+                fours.append([(row-i, col+i) for i in range(4)])
+        assert len(fours) == 69
+        return fours
     def check_four_alternate(self,player):
         '''checks the board for four in a row for the given player'''
         for entry in self.available_fours:
