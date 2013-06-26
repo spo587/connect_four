@@ -219,7 +219,18 @@ class Board(object):
                     total += self.available_fours_at_index_for_player(player,(row,col))
         l = list(set(total))
         #print l
-        return len(l)
+        return l
+    def prune_total_possible_fours(self,player1,player2):
+        openings_reverted_2 = [(j,i) for (i,j) in self.open_three_openings(player2)]
+        l = self.check_total_possible_fours(player1)[:]
+        for list_of_tuples in self.check_total_possible_fours(player1):
+            for tup in list_of_tuples:
+                for row in range(tup[0]+1,self.height+1,2):
+                    if (row,tup[1]) in openings_reverted_2:
+                        l.remove(list_of_tuples)
+        return l
+
+
      
     def check_total_surrounders(self,player):
         total = 0
