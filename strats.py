@@ -173,8 +173,9 @@ def avoid_three_in_open_row(player1,player2,board):
         return l
 
 
-def surrounders_stacker(player1,player2,board,l):
-    '''bases move on the surrounders function, subject to the checkmate constraint, the stacker constraint, and the open row constraint'''
+def surrounders(player1,player2,board,l):
+    '''bases move on the surrounders function, taking a list of potential moves as an input, so that it can be implemented
+    at any cutoff level'''
     newboard = copy.deepcopy(board)
     dictionary_of_moves = {}
     for move in l:
@@ -244,7 +245,7 @@ def utility_function_simpler(player1,player2,board,l,weights):
 
 
 
-def strat_basic(player1,player2,board, show_decision=False):
+def strat_basic(player1,player2,board, cutoff, show_decision=False):
     first_cut = minimum(player1,player2,board)
     if len(first_cut) == 0:
 
@@ -261,6 +262,8 @@ def strat_basic(player1,player2,board, show_decision=False):
         return second_cut
     if show_decision:
         print 'past second cut ', second_cut
+    if cutoff == 2:
+        return second_cut
     third_cut = avoid_checkmate(player1,player2,board)
     if len(third_cut) == 0:
         print 'no move avoids checkmate'
@@ -270,6 +273,8 @@ def strat_basic(player1,player2,board, show_decision=False):
         return third_cut
     if show_decision:
         print 'past third  cut ', third_cut
+    if cutoff == 3:
+        return third_cut
     fourth_cut = [item for item in third_cut if item in gos(player1,player2,board)]
     if len(fourth_cut) > 0:
         print 'move determined by gos function combined with avoid checkmate function'
@@ -284,6 +289,8 @@ def strat_basic(player1,player2,board, show_decision=False):
         return fifth_cut
     if show_decision:
         print 'past fifth cut ', fifth_cut
+    if cutoff == 5:
+        return fifth_cut
     sixth_cut = [item for item in fifth_cut if item in build_stacked_open_threes(player1,player2,board)]
     if len(sixth_cut) > 0:
         print 'move determined to build a stack'
@@ -354,7 +361,7 @@ def comp_play_comp(weights_team_1,weights_team_2,strat1=strat_utility_simpler,st
         if board.check_four_alternate(team1):
             print 'team 1 wins!!!!!'
             return 1
-        print 'utility function for player 2', board.utility_estimator_simpler(2,1,weights_team_2)
+        print 'utility function for player 1', board.utility_estimator_simpler(1,2,weights_team_2)
         board.add_move(strat2(team2,team1,board,weights_team_2),team2)
         print 'number of moves so far: ', len(board.moves)
         pprint(board.arr)
@@ -367,8 +374,8 @@ def comp_play_comp(weights_team_1,weights_team_2,strat1=strat_utility_simpler,st
 
 def play_game_1_player_comp_leads(weights, strat=strat_utility_simpler, team1=1, team2=2, board=cf.Board(1,2)):
     for i in range(21):
-        print 'utility estimator for you, human player '
-        print board.utility_estimator_simpler(1,2,weights)
+        print 'utility estimator for comp '
+        print board.utility_estimator_simpler(2,1,weights)
         board.add_move(strat(team2,team1,board,weights),team2)
         pprint(board.arr)
         if board.check_four_alternate(team2):
@@ -376,8 +383,8 @@ def play_game_1_player_comp_leads(weights, strat=strat_utility_simpler, team1=1,
             return
         elif board.accessible_open_threes(team2):
             print '###### CHECK #######'
-        print 'utility estimator for you, human player '
-        print board.utility_estimator_simpler(1,2,weights)
+        print 'utility estimator for comp '
+        print board.utility_estimator_simpler(2,1,weights)
         if not board.add_move(int(raw_input('team 1, your move, plz:  ')),team1):
             board.add_move(int(raw_input('team 1, your move, plz:  ')),team1)
         pprint(board.arr)
@@ -396,9 +403,9 @@ def multiple_games_computer(num,strat1=strat_utility, strat2=strat_utility):
 
 #### changed!!!!
 if __name__ == '__main__':
-    #play_game_1_player_comp_leads((1,1))
+    play_game_1_player_comp_leads((1,1))
     #play_game_1_player_human_leads()
-    comp_play_comp((1,1),(1,1))
+    #comp_play_comp((1,1),(1,1))
     #print multiple_games_computer(4,8,16)
     #print which_strat_simulation(1)
 

@@ -1,5 +1,6 @@
 import itertools
 import copy
+import defaultdict
         
 '''this file contains the board class, whose methods will be called in the strategies file cf_strats_redone. you can also
 play a two-player, human vs. human game in this file.'''
@@ -12,6 +13,7 @@ class Board(object):
         self.arr = [[0 for i in range(7)] for j in range(6)]
         self.open_cols = range(7)
         self.moves = []
+        self.moves_dict = defaultdict(int)
         self.player1 = player1
         self.player2 = player2
         self.height = height
@@ -103,6 +105,7 @@ class Board(object):
         return l2
                 
     def num_of_lowest_open_threes(self,player1,player2):
+
         openings_reverted_1 = [(j,i) for (i,j) in self.open_three_openings(player1)]
         
         openings_reverted_2 = [(j,i) for (i,j) in self.open_three_openings(player2)]
@@ -117,6 +120,31 @@ class Board(object):
                     
                     break
                 elif (row,col) in openings_reverted_2 and (row,col) not in openings_reverted_1:
+                    total -= 1
+                    
+                    break
+                row -= 1
+            col += 1
+        return total
+
+    def num_of_controlling_open_threes(self,player1,player2):
+        '''modifies lowest open threes function for even odd row indexing.
+        note that this function must be called in the right order, 
+        player1 is the player who starts the game'''
+        openings_reverted_1 = [(j,i) for (i,j) in self.open_three_openings(player1)]
+        
+        openings_reverted_2 = [(j,i) for (i,j) in self.open_three_openings(player2)]
+        
+        total = 0
+        col = 0
+        while col < 7:
+            row = 5
+            while row > -1:
+                if row%2 == 1 and (row,col) in openings_reverted_1:
+                    total += 1
+                    
+                    break
+                elif row%2 == 0 and (row,col) in openings_reverted_2:
                     total -= 1
                     
                     break
@@ -261,6 +289,7 @@ class Board(object):
             if self.arr[j][col] == 0:
                 self.arr[j][col] = player
                 self.moves.append(col)
+                self.moves_dict[col] += 1
                 if j == 0:
                     self.open_cols.remove(col)
                 return True
@@ -275,6 +304,7 @@ class Board(object):
                     raise 'ERROR: tried to remove move from empty column'
                 else:
                     self.arr[j+1][col] = 0
+                    self.moves_dict[col] -= 1
 
 
         if found == 0:
@@ -307,14 +337,16 @@ class Board(object):
     def no_gos(self,player1,player2):
         '''if a move by player2 in a column results in a win for player1, then player1 should not go in that column, unless it
         has open three indices stacked on top of each other. this function
-        returns those columns in a list'''
+        returns those columns in a list
+        ALERT: must be called in right order! player1 is the first player to move int eh game'''
         newboard = copy.deepcopy(self)
         l = newboard.open_cols[:]
         list_of_no_gos = []
         for move in l:
             newboard.add_move(move,player2)
-            if newboard.check_move_win(move,player1) is not False and move not in self.gos(player1,player2):
+            if newboard.check_move_win(move,player1) is not False and move not in self.gos(player1,player2) and newboard.moves_dict[move]%2==1:
                 list_of_no_gos.append(move)
+            newboard.remove_move(move)
         l2 = list(set(list_of_no_gos))
         return l2
 
@@ -420,8 +452,9 @@ class Board(object):
         return utility
 
     def utility_estimator_simpler(self,player1,player2,weights):
+        '''must be called in the right order, player1 being the player who goes first'''
         potential_fours_utility = weights[0]*(len(self.prune_total_possible_fours(player1,player2)) - len(self.prune_total_possible_fours(player2,player1)))
-        lowest_threes_utility = weights[1]*(self.num_of_lowest_open_threes(player1,player2))
+        lowest_threes_utility = weights[1]*(self.num_of_controlling_open_threes(player1,player2))
         center_score = 0
         for j in range(self.height):
             if self.arr[j][3] == player1:
