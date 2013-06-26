@@ -288,13 +288,14 @@ def strat_basic(player1,player2,board, show_decision=False):
 
     return eight_cut
 
-def strat_utility(player1,player2,board,weight_center, weight_stacks,weight_open_rows,show_decision=False):
+def strat_utility(player1,player2,board,weights,show_decision=False):
+    u1,u2,u3 = weights
     available_moves = strat_basic(player1,player2,board,show_decision=True)
     list_of_maximum_utility_moves = []
     if len(available_moves) == 1:
         print 'utility function not called'
         return available_moves[0]
-    dictionary_of_moves = utility_function(player1,player2,board,available_moves,weight_center,weight_stacks,weight_open_rows)
+    dictionary_of_moves = utility_function(player1,player2,board,available_moves,u1,u2,u3)
     print 'this is the utility function dictionary ', dictionary_of_moves
     for col in dictionary_of_moves.keys():
         if dictionary_of_moves[col] == max(dictionary_of_moves.values()):
@@ -307,18 +308,20 @@ def strat_utility(player1,player2,board,weight_center, weight_stacks,weight_open
 ## change
 #def strat_utility
 
-def comp_play_comp(strat1,strat2,team1=1,team2=2):
+def comp_play_comp(weights_team_1,weights_team_2,strat1=strat_utility,strat2=strat_utility,team1=1,team2=2):
     board = cf.Board(team1,team2)
+    u1,u2,u3 = weights_team_1
+    v1,v2,v3 = weights_team_2
     for i in range(21):
-        print 'utility function for player 1', board.utility_estimator(1,2,1,3,1)
-        board.add_move(strat1(team1,team2,board,1,3,1,show_decision=True),team1)
+        print 'utility function for player 1', board.utility_estimator(1,2,u1,u2,u3)
+        board.add_move(strat1(team1,team2,board,weights_team_1),team1)
         print 'number of moves so far: ', len(board.moves)
         pprint(board.arr)
         if board.check_four_alternate(team1):
             print 'team 1 wins!!!!!'
             return 1
-        print 'utility function for player 2', board.utility_estimator(2,1,3,2,1)
-        board.add_move(strat2(team2,team1,board,3,2,1,show_decision=True),team2)
+        print 'utility function for player 2', board.utility_estimator(2,1,v1,v2,v3)
+        board.add_move(strat2(team2,team1,board,weights_team_2),team2)
         print 'number of moves so far: ', len(board.moves)
         pprint(board.arr)
         if board.check_four_alternate(team2):
@@ -328,11 +331,12 @@ def comp_play_comp(strat1,strat2,team1=1,team2=2):
     return 0
 
 
-def play_game_1_player_comp_leads(strat=strat_utility, team1=1, team2=2, board=cf.Board(1,2)):
+def play_game_1_player_comp_leads(weights, strat=strat_utility, team1=1, team2=2, board=cf.Board(1,2)):
+    u1,u2,u3 = weights
     for i in range(21):
         print 'utility estimator for you, human player '
-        print board.utility_estimator(1,2,1,1,1,toPrint=True)
-        board.add_move(strat(team2,team1,board,1,1,1,show_decision=True),team2)
+        print board.utility_estimator(1,2,u1,u2,u3,toPrint=True)
+        board.add_move(strat(team2,team1,board,weights,show_decision=True),team2)
         pprint(board.arr)
         if board.check_four_alternate(team2):
             print 'computer wins!!!!!'
@@ -340,7 +344,7 @@ def play_game_1_player_comp_leads(strat=strat_utility, team1=1, team2=2, board=c
         elif board.accessible_open_threes(team2):
             print '###### CHECK #######'
         print 'utility estimator for you, human player '
-        print board.utility_estimator(1,2,1,1,1,toPrint=True)
+        print board.utility_estimator(1,2,u1,u2,u3,toPrint=True)
         if not board.add_move(int(raw_input('team 1, your move, plz:  ')),team1):
             board.add_move(int(raw_input('team 1, your move, plz:  ')),team1)
         pprint(board.arr)
@@ -350,11 +354,18 @@ def play_game_1_player_comp_leads(strat=strat_utility, team1=1, team2=2, board=c
         elif board.accessible_open_threes(team1):
             print '###### CHECK #######'
     print 'its a draw!!!!!'
+
+def multiple_games_computer(num,strat1=strat_utility, strat2=strat_utility):
+    result = 0
+    for i in range(num):
+        result += comp_play_comp(strat1, strat2)
+    return result
+
 #### changed!!!!
 if __name__ == '__main__':
-    play_game_1_player_comp_leads()
-    #play_game_1_player_human_leads()
-    #comp_play_comp(strat_utility,strat_utility)
+    play_game_1_player_comp_leads((1,3,0))
+    play_game_1_player_human_leads()
+    #comp_play_comp((0,5,0),(3,1,0))
     #print multiple_games_computer(4,8,16)
     #print which_strat_simulation(1)
 
