@@ -222,13 +222,23 @@ class Board(object):
         return l
     def prune_total_possible_fours(self,player1,player2):
         openings_reverted_2 = [(j,i) for (i,j) in self.open_three_openings(player2)]
-        l = self.check_total_possible_fours(player1)[:]
+        l1 = self.check_total_possible_fours(player1)[:]
         for list_of_tuples in self.check_total_possible_fours(player1):
             for tup in list_of_tuples:
                 for row in range(tup[0]+1,self.height+1,2):
                     if (row,tup[1]) in openings_reverted_2:
-                        l.remove(list_of_tuples)
+                        l1.remove(list_of_tuples)
+        openings_reverted_1 = [(j,i) for (i,j) in self.open_three_openings(player1)]
+        l2 = self.check_total_possible_fours(player1)[:]
+        for list_of_tuples in self.check_total_possible_fours(player1):
+            for tup in list_of_tuples:
+                for row in range(tup[0]+2,self.height+1,2):
+                    if (row,tup[1]) in openings_reverted_1:
+                        l2.remove(list_of_tuples)
+
+        l = [item for item in l1 if item in l2]
         return l
+
 
 
      
