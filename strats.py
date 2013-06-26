@@ -220,6 +220,29 @@ def utility_function(player1,player2,board,l,weight_center, weight_stacks,weight
     # print 'final list of moves choosing from based on utility function ', final_list
     # return final_list
 
+def utility_function_simpler(player1,player2,board,l,weights):
+    newboard = copy.deepcopy(board)
+    final_list = []
+    print 'columns available for moves based on eight cut function above ', l
+    utility_dict = {}
+    for col1 in l:
+        newboard.add_move(col1,player1)
+        l2 = newboard.open_cols[:]
+        if len(l2) == 0:
+            return l
+        else:
+            # print 'open columns in new hypothetical board ', l2
+            list_of_utilities = []
+            for col2 in l2:
+                newboard.add_move(col2,player2)
+                u = newboard.utility_estimator_simpler(player1,player2,weights)
+                list_of_utilities.append(u)
+                newboard.remove_move(col2)
+            utility_dict[col1] = min(list_of_utilities)
+            newboard.remove_move(col1)
+    return utility_dict
+
+
 
 def strat_basic(player1,player2,board, show_decision=False):
     first_cut = minimum(player1,player2,board)
@@ -276,17 +299,17 @@ def strat_basic(player1,player2,board, show_decision=False):
         seventh_cut = fifth_cut
     if show_decision:
         print 'past 7th cut ', seventh_cut
-    eight_cut = [item for item in seventh_cut if item in avoid_three_in_open_row(player1,player2,board)]
-    if len(eight_cut) == 0:
-        eight_cut = seventh_cut
-    elif len(eight_cut) == 1:
-        print 'move determined to avoid an open row of three for opponent'
-        return eight_cut
-    if show_decision:
+    # eight_cut = [item for item in seventh_cut if item in avoid_three_in_open_row(player1,player2,board)]
+    # if len(eight_cut) == 0:
+    #     eight_cut = seventh_cut
+    # elif len(eight_cut) == 1:
+    #     print 'move determined to avoid an open row of three for opponent'
+    #     return eight_cut
+    # if show_decision:
 
-        print 'eight_cut ', eight_cut
+    #     print 'eight_cut ', eight_cut
 
-    return eight_cut
+    return seventh_cut
 
 def strat_utility(player1,player2,board,weights,show_decision=False):
     u1,u2,u3 = weights
@@ -303,7 +326,20 @@ def strat_utility(player1,player2,board,weights,show_decision=False):
     print 'final list of moves choosing from based on utility function ', list_of_maximum_utility_moves
     return random.choice(list_of_maximum_utility_moves)
 
-    
+def strat_utility_simpler(player1,player2,board,weights,show_decision=False):
+    available_moves = strat_basic(player1,player2,board,show_decision=True)
+    list_of_maximum_utility_moves = []
+    if len(available_moves) == 1:
+        print 'utility function not called'
+        return available_moves[0]
+    dictionary_of_moves = utility_function_simpler(player1,player2,board,available_moves,weights)
+    print 'this is the utility function dictionary ', dictionary_of_moves
+    for col in dictionary_of_moves.keys():
+        if dictionary_of_moves[col] == max(dictionary_of_moves.values()):
+            list_of_maximum_utility_moves.append(col)
+    print 'final list of moves choosing from based on utility function ', list_of_maximum_utility_moves
+    return random.choice(list_of_maximum_utility_moves)
+
 
 ## change
 #def strat_utility
@@ -331,12 +367,11 @@ def comp_play_comp(weights_team_1,weights_team_2,strat1=strat_utility,strat2=str
     return 0
 
 
-def play_game_1_player_comp_leads(weights, strat=strat_utility, team1=1, team2=2, board=cf.Board(1,2)):
-    u1,u2,u3 = weights
+def play_game_1_player_comp_leads(weights, strat=strat_utility_simpler, team1=1, team2=2, board=cf.Board(1,2)):
     for i in range(21):
         print 'utility estimator for you, human player '
-        print board.utility_estimator(1,2,u1,u2,u3,toPrint=True)
-        board.add_move(strat(team2,team1,board,weights,show_decision=True),team2)
+        print board.utility_estimator_simpler(1,2,weights)
+        board.add_move(strat(team2,team1,board,weights),team2)
         pprint(board.arr)
         if board.check_four_alternate(team2):
             print 'computer wins!!!!!'
@@ -344,7 +379,7 @@ def play_game_1_player_comp_leads(weights, strat=strat_utility, team1=1, team2=2
         elif board.accessible_open_threes(team2):
             print '###### CHECK #######'
         print 'utility estimator for you, human player '
-        print board.utility_estimator(1,2,u1,u2,u3,toPrint=True)
+        print board.utility_estimator_simpler(1,2,weights)
         if not board.add_move(int(raw_input('team 1, your move, plz:  ')),team1):
             board.add_move(int(raw_input('team 1, your move, plz:  ')),team1)
         pprint(board.arr)
@@ -363,8 +398,8 @@ def multiple_games_computer(num,strat1=strat_utility, strat2=strat_utility):
 
 #### changed!!!!
 if __name__ == '__main__':
-    play_game_1_player_comp_leads((1,3,0))
-    play_game_1_player_human_leads()
+    play_game_1_player_comp_leads((1,1))
+    #play_game_1_player_human_leads()
     #comp_play_comp((0,5,0),(3,1,0))
     #print multiple_games_computer(4,8,16)
     #print which_strat_simulation(1)

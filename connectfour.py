@@ -98,16 +98,15 @@ class Board(object):
                     l.append((line))
         l2 = []
         for item in l:
-            print item
             item = tuple(item)
             l2.append(item)
         return l2
                 
     def num_of_lowest_open_threes(self,player1,player2):
         openings_reverted_1 = [(j,i) for (i,j) in self.open_three_openings(player1)]
-        print openings_reverted_1
+        
         openings_reverted_2 = [(j,i) for (i,j) in self.open_three_openings(player2)]
-        print openings_reverted_2
+        
         total = 0
         col = 0
         while col < 7:
@@ -115,11 +114,11 @@ class Board(object):
             while row > -1:
                 if (row,col) in openings_reverted_1 and (row,col) not in openings_reverted_2:
                     total += 1
-                    print total
+                    
                     break
                 elif (row,col) in openings_reverted_2 and (row,col) not in openings_reverted_1:
                     total -= 1
-                    print total
+                    
                     break
                 row -= 1
             col += 1
@@ -219,7 +218,7 @@ class Board(object):
                 if self.arr[row][col] == player:
                     total += self.available_fours_at_index_for_player(player,(row,col))
         l = list(set(total))
-        print l
+        #print l
         return len(l)
      
     def check_total_surrounders(self,player):
@@ -399,7 +398,16 @@ class Board(object):
         utility = surrounders_factor + threes_factor + center_score
         return utility
 
-
+    def utility_estimator_simpler(self,player1,player2,weights):
+        potential_fours_utility = weights[0]*(self.check_total_possible_fours(player1) - self.check_total_possible_fours(player2))
+        lowest_threes_utility = weights[1]*(self.num_of_lowest_open_threes(player1,player2))
+        center_score = 0
+        for j in range(self.height):
+            if self.arr[j][3] == player1:
+                center_score += 2
+            elif self.arr[j][3] == player2:
+                center_score -= 2
+        return potential_fours_utility + lowest_threes_utility + center_score
   
 
     
