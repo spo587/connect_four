@@ -1,6 +1,7 @@
 import itertools
 import copy
-import defaultdict
+from collections import defaultdict
+from pprint import pprint
         
 '''this file contains the board class, whose methods will be called in the strategies file cf_strats_redone. you can also
 play a two-player, human vs. human game in this file.'''
@@ -334,7 +335,7 @@ class Board(object):
 
 
 
-    def no_gos(self,player1,player2):
+    def no_gos_first_player(self,player1,player2):
         '''if a move by player2 in a column results in a win for player1, then player1 should not go in that column, unless it
         has open three indices stacked on top of each other. this function
         returns those columns in a list
@@ -344,7 +345,20 @@ class Board(object):
         list_of_no_gos = []
         for move in l:
             newboard.add_move(move,player2)
-            if newboard.check_move_win(move,player1) is not False and move not in self.gos(player1,player2) and newboard.moves_dict[move]%2==1:
+            if newboard.check_move_win(move,player1) is not False and move not in self.gos(player1) and newboard.moves_dict[move]%2==0:
+                list_of_no_gos.append(move)
+            newboard.remove_move(move)
+        l2 = list(set(list_of_no_gos))
+        return l2
+
+    def no_gos_second_player(self,player2,player1):
+        '''same as above, but for the second player to move'''
+        newboard = copy.deepcopy(self)
+        l = newboard.open_cols[:]
+        list_of_no_gos = []
+        for move in l:
+            newboard.add_move(move,player1)
+            if newboard.check_move_win(move,player2) is not False and move not in self.gos(player2) and newboard.moves_dict[move]%2==1:
                 list_of_no_gos.append(move)
             newboard.remove_move(move)
         l2 = list(set(list_of_no_gos))
