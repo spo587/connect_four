@@ -4,7 +4,8 @@ import copy
 '''this file contains the board class, whose methods will be called in the strategies file cf_strats_redone. you can also
 play a two-player, human vs. human game in this file.'''
 
-
+## add weights to the no-gos in the utility estimator
+## make it so that the first open three in a given column is weighted higher
 
 class Board(object):
     def __init__(self, player1, player2, height=6, width=7):
@@ -102,7 +103,27 @@ class Board(object):
             l2.append(item)
         return l2
                 
-
+    def num_of_lowest_open_threes(self,player1,player2):
+        openings_reverted_1 = [(j,i) for (i,j) in self.open_three_openings(player1)]
+        print openings_reverted_1
+        openings_reverted_2 = [(j,i) for (i,j) in self.open_three_openings(player2)]
+        print openings_reverted_2
+        total = 0
+        col = 0
+        while col < 7:
+            row = 5
+            while row > -1:
+                if (row,col) in openings_reverted_1 and (row,col) not in openings_reverted_2:
+                    total += 1
+                    print total
+                    break
+                elif (row,col) in openings_reverted_2 and (row,col) not in openings_reverted_1:
+                    total -= 1
+                    print total
+                    break
+                row -= 1
+            col += 1
+        return total
 
     def check_four_alternate(self,player):
         '''checks the board for four in a row for the given player'''
