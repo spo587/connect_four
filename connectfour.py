@@ -6,7 +6,6 @@ play a two-player, human vs. human game in this file.'''
 
 
 
-
 class Board(object):
     def __init__(self, player1, player2, height=6, width=7):
         self.arr = [[0 for i in range(7)] for j in range(6)]
@@ -87,6 +86,22 @@ class Board(object):
 
     def available_fours_at(self, index):
         return [line for line in self.available_fours_no_columns if index in line]
+
+    def available_fours_at_index_for_player(self,player,index):
+        l = []
+        for line in self.available_fours_at(index):
+                four_list = (self.arr[i][j] for i, j in line)
+                s = list(set(four_list))
+                s.sort()
+                if s == [0,player]:
+                    l.append((line))
+        l2 = []
+        for item in l:
+            print item
+            item = tuple(item)
+            l2.append(item)
+        return l2
+                
 
 
     def check_four_alternate(self,player):
@@ -176,6 +191,15 @@ class Board(object):
                 value = self.surrounders(player,(j,col))
                 self.arr[j][col] = 0
                 return value
+    def check_total_possible_fours(self,player):
+        total = []
+        for row in range(self.height):
+            for col in range(self.width):
+                if self.arr[row][col] == player:
+                    total += self.available_fours_at_index_for_player(player,(row,col))
+        l = list(set(total))
+        print l
+        return len(l)
      
     def check_total_surrounders(self,player):
         total = 0
@@ -229,6 +253,30 @@ class Board(object):
             if value:
                 l.append(col)
         return len(l)   ## will map to False if len(l) == 0
+
+    def gos(self,player):
+        '''if a player has stacked open threes in a column, it should move in that column to force the game. this function
+        returns a list of columns with stacked open threes'''
+        l = [item[0][0] for item in self.stacked_open_threes(player)]
+        l2 = list(set(l))
+        return l2
+
+
+
+    def no_gos(self,player1,player2):
+        '''if a move by player2 in a column results in a win for player1, then player1 should not go in that column, unless it
+        has open three indices stacked on top of each other. this function
+        returns those columns in a list'''
+        newboard = copy.deepcopy(self)
+        l = newboard.open_cols[:]
+        list_of_no_gos = []
+        for move in l:
+            newboard.add_move(move,player2)
+            if newboard.check_move_win(move,player1) is not False and move not in self.gos(player1,player2):
+                list_of_no_gos.append(move)
+        l2 = list(set(list_of_no_gos))
+        return l2
+
 
 
     ### not using the methods below yet, but they could be useful. have tested them
@@ -287,7 +335,7 @@ class Board(object):
         return False
 
 
-    def utility_estimator(self,player1,player2,weight_center, weight_stacks,weight_open_rows,toPrint=False):
+    def utility_estimator(self,player1,player2,weight_center, weight_stacks,weight_open_rows,toPrint=False,weight_no_gos=5,change_factor=1/float(42)):
         '''the estimator of the utility of the board state for player1'''
         center_score = 0
         for j in range(self.height):
@@ -297,7 +345,7 @@ class Board(object):
                 center_score -= weight_center
         s1 = self.check_total_surrounders(player1)
         s2 = self.check_total_surrounders(player2)
-        surrounders_factor = s1 - s2
+        surrounders_factor = (s1 - s2)*change_factor*(42 - len(self.moves))
         u1 = self.open_three_openings(player1)[:]
         u2 = self.open_three_openings(player2)[:]
 
@@ -316,11 +364,13 @@ class Board(object):
             if (tup2[0]+4,tup2[1]) in u2:
                 open_rows_2 += 1
 
-        stacks1 = len(self.stacked_open_threes(player1))
-        stacks2 = len(self.stacked_open_threes(player2))
+        stacks1 = len(self.gos(player1))
+        stacks2 = len(self.gos(player2))
+        no_gos_1 = len(self.no_gos(player1,player2))
+        no_gos_2 = len(self.no_gos(player2,player1))
         ## weight the stacks higher than other open threes
 
-        threes_factor = len(u1) + weight_stacks*stacks1+weight_open_rows*open_rows_1 - (len(u2) + weight_stacks*stacks2+weight_center*open_rows_1)
+        threes_factor = len(u1) + weight_stacks*stacks1+weight_open_rows*open_rows_1 + weight_no_gos*no_gos_1 - (len(u2) + weight_stacks*stacks2+weight_center*open_rows_1 + weight_no_gos*no_gos_2)
         if toPrint:
             print 'surrounders factor ', surrounders_factor
             print 'center score ', center_score
