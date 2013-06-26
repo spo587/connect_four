@@ -309,17 +309,19 @@ def strat_basic(player1,player2,board, cutoff, show_decision=False):
         seventh_cut = fifth_cut
     if show_decision:
         print 'past 7th cut ', seventh_cut
-    # eight_cut = [item for item in seventh_cut if item in avoid_three_in_open_row(player1,player2,board)]
-    # if len(eight_cut) == 0:
-    #     eight_cut = seventh_cut
-    # elif len(eight_cut) == 1:
-    #     print 'move determined to avoid an open row of three for opponent'
-    #     return eight_cut
-    # if show_decision:
+    if cutoff == 7:
+        return seventh_cut
+    eight_cut = [item for item in seventh_cut if item in avoid_three_in_open_row(player1,player2,board)]
+    if len(eight_cut) == 0:
+        eight_cut = seventh_cut
+    elif len(eight_cut) == 1:
+        print 'move determined to avoid an open row of three for opponent'
+        return eight_cut
+    if show_decision:
 
-    #     print 'eight_cut ', eight_cut
+        print 'eight_cut ', eight_cut
 
-    return seventh_cut
+    return eighth_cut
 
 def strat_utility(player1,player2,board,weights,show_decision=False):
     u1,u2,u3 = weights
@@ -336,8 +338,8 @@ def strat_utility(player1,player2,board,weights,show_decision=False):
     print 'final list of moves choosing from based on utility function ', list_of_maximum_utility_moves
     return random.choice(list_of_maximum_utility_moves)
 
-def strat_utility_simpler(player1,player2,board,weights,show_decision=False):
-    available_moves = strat_basic(player1,player2,board,show_decision=True)
+def strat_utility_simpler(player1,player2,board,weights,cutoff,show_decision=False):
+    available_moves = strat_basic(player1,player2,board,cutoff,show_decision=True)
     list_of_maximum_utility_moves = []
     if len(available_moves) == 1:
         print 'utility function not called'
