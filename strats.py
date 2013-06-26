@@ -281,7 +281,10 @@ def strat_basic(player1,player2,board, cutoff, show_decision=False):
         return fourth_cut
     if show_decision:
         print 'past fourth cut ', fourth_cut
-    fifth_cut = [item for item in third_cut if item in no_gos(player1,player2,board)]
+    if player1 == 1:
+        fifth_cut = [item for item in third_cut if item not in no_gos_first_player(player1,player2,board)]
+    else:
+        fifth_cut = [item for item in third_cut if item not in no_gos_second_player(player1,player2,board)]
     if len(fifth_cut) == 0:
         fifth_cut = third_cut
     elif len(fifth_cut) == 1:
