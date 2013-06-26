@@ -344,19 +344,17 @@ def strat_utility_simpler(player1,player2,board,weights,show_decision=False):
 ## change
 #def strat_utility
 
-def comp_play_comp(weights_team_1,weights_team_2,strat1=strat_utility,strat2=strat_utility,team1=1,team2=2):
+def comp_play_comp(weights_team_1,weights_team_2,strat1=strat_utility_simpler,strat2=strat_utility_simpler,team1=1,team2=2):
     board = cf.Board(team1,team2)
-    u1,u2,u3 = weights_team_1
-    v1,v2,v3 = weights_team_2
     for i in range(21):
-        print 'utility function for player 1', board.utility_estimator(1,2,u1,u2,u3)
+        print 'utility function for player 1', board.utility_estimator_simpler(1,2,weights_team_1)
         board.add_move(strat1(team1,team2,board,weights_team_1),team1)
         print 'number of moves so far: ', len(board.moves)
         pprint(board.arr)
         if board.check_four_alternate(team1):
             print 'team 1 wins!!!!!'
             return 1
-        print 'utility function for player 2', board.utility_estimator(2,1,v1,v2,v3)
+        print 'utility function for player 2', board.utility_estimator_simpler(2,1,weights_team_2)
         board.add_move(strat2(team2,team1,board,weights_team_2),team2)
         print 'number of moves so far: ', len(board.moves)
         pprint(board.arr)
@@ -398,9 +396,9 @@ def multiple_games_computer(num,strat1=strat_utility, strat2=strat_utility):
 
 #### changed!!!!
 if __name__ == '__main__':
-    play_game_1_player_comp_leads((1,1))
+    #play_game_1_player_comp_leads((1,1))
     #play_game_1_player_human_leads()
-    #comp_play_comp((0,5,0),(3,1,0))
+    comp_play_comp((1,1),(1,1))
     #print multiple_games_computer(4,8,16)
     #print which_strat_simulation(1)
 

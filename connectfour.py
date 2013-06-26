@@ -226,14 +226,14 @@ class Board(object):
         for list_of_tuples in self.check_total_possible_fours(player1):
             for tup in list_of_tuples:
                 for row in range(tup[0]+1,self.height+1,2):
-                    if (row,tup[1]) in openings_reverted_2:
+                    if (row,tup[1]) in openings_reverted_2 and list_of_tuples in l1:
                         l1.remove(list_of_tuples)
         openings_reverted_1 = [(j,i) for (i,j) in self.open_three_openings(player1)]
         l2 = self.check_total_possible_fours(player1)[:]
         for list_of_tuples in self.check_total_possible_fours(player1):
             for tup in list_of_tuples:
                 for row in range(tup[0]+2,self.height+1,2):
-                    if (row,tup[1]) in openings_reverted_1:
+                    if (row,tup[1]) in openings_reverted_1 and list_of_tuples in l2:
                         l2.remove(list_of_tuples)
 
         l = [item for item in l1 if item in l2]
@@ -420,7 +420,7 @@ class Board(object):
         return utility
 
     def utility_estimator_simpler(self,player1,player2,weights):
-        potential_fours_utility = weights[0]*(self.check_total_possible_fours(player1) - self.check_total_possible_fours(player2))
+        potential_fours_utility = weights[0]*(len(self.prune_total_possible_fours(player1,player2)) - len(self.prune_total_possible_fours(player2,player1)))
         lowest_threes_utility = weights[1]*(self.num_of_lowest_open_threes(player1,player2))
         center_score = 0
         for j in range(self.height):
