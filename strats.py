@@ -282,9 +282,9 @@ def strat_basic(player1,player2,board, cutoff, show_decision=False):
     if show_decision:
         print 'past fourth cut ', fourth_cut
     if player1 == 1:
-        fifth_cut = [item for item in third_cut if item not in no_gos_first_player(player1,player2,board)]
+        fifth_cut = [item for item in third_cut if item not in board.no_gos_first_player(player1,player2)]
     else:
-        fifth_cut = [item for item in third_cut if item not in no_gos_second_player(player1,player2,board)]
+        fifth_cut = [item for item in third_cut if item not in board.no_gos_second_player(player1,player2)]
     if len(fifth_cut) == 0:
         fifth_cut = third_cut
     elif len(fifth_cut) == 1:
@@ -378,23 +378,23 @@ def comp_play_comp(weights_team_1,weights_team_2,strat1=strat_utility_simpler,st
 def play_game_1_player_comp_leads(weights, strat=strat_utility_simpler, team1=1, team2=2, board=cf.Board(1,2)):
     for i in range(21):
         print 'utility estimator for comp '
-        print board.utility_estimator_simpler(2,1,weights)
-        board.add_move(strat(team2,team1,board,weights),team2)
-        pprint(board.arr)
-        if board.check_four_alternate(team2):
-            print 'computer wins!!!!!'
-            return
-        elif board.accessible_open_threes(team2):
-            print '###### CHECK #######'
-        print 'utility estimator for comp '
-        print board.utility_estimator_simpler(2,1,weights)
-        if not board.add_move(int(raw_input('team 1, your move, plz:  ')),team1):
-            board.add_move(int(raw_input('team 1, your move, plz:  ')),team1)
+        print board.utility_estimator_simpler(team1,team2,weights,toPrint=True)
+        board.add_move(strat(team1,team2,board,weights,7),team1)
         pprint(board.arr)
         if board.check_four_alternate(team1):
-            print 'human wins!!!!!'
+            print 'computer wins!!!!!'
             return
         elif board.accessible_open_threes(team1):
+            print '###### CHECK #######'
+        print 'utility estimator for comp '
+        print board.utility_estimator_simpler(team1,team2,weights,toPrint=True)
+        if not board.add_move(int(raw_input('team 1, your move, plz:  ')),team2):
+            board.add_move(int(raw_input('team 1, your move, plz:  ')),team2)
+        pprint(board.arr)
+        if board.check_four_alternate(team2):
+            print 'human wins!!!!!'
+            return
+        elif board.accessible_open_threes(team2):
             print '###### CHECK #######'
     print 'its a draw!!!!!'
 
@@ -406,7 +406,7 @@ def multiple_games_computer(num,strat1=strat_utility, strat2=strat_utility):
 
 #### changed!!!!
 if __name__ == '__main__':
-    play_game_1_player_comp_leads((1,1))
+    play_game_1_player_comp_leads((1,20))
     #play_game_1_player_human_leads()
     #comp_play_comp((1,1),(1,1))
     #print multiple_games_computer(4,8,16)

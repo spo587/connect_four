@@ -128,29 +128,59 @@ class Board(object):
             col += 1
         return total
 
-    def num_of_controlling_open_threes(self,player1,player2):
+    def free_moves_remaining(self,player1,player2):
+        newboard = copy.deepcopy(board)
+        l1 = newboard.open_cols[:]
+        for col1 in l1:
+            newboard.add_move(col1,player1)
+            for col2 in newboard.open_cols:
+                newboard.add_move(col2,player2)
+
+
+
+    def control_end(self,player1,player2):
         '''modifies lowest open threes function for even odd row indexing.
         note that this function must be called in the right order, 
-        player1 is the player who starts the game'''
+        player1 is the player who starts the game. returns 1 if player1 controls the end game, returns 
+        -1 if player 2 controls the end game, returns 0 otherwise.'''
         openings_reverted_1 = [(j,i) for (i,j) in self.open_three_openings(player1)]
         
         openings_reverted_2 = [(j,i) for (i,j) in self.open_three_openings(player2)]
-        
-        total = 0
+        total_1 = 0
+        total_2_even = 0
+        total_2_odd = 0
         col = 0
         while col < 7:
             row = 5
             while row > -1:
-                if row%2 == 1 and (row,col) in openings_reverted_1:
-                    total += 1
-                    
-                    break
+                if row%2 == 1:
+                    if (row,col) in openings_reverted_2 and (row,col) not in openings_reverted_2:
+                        print 'incrementing total 2 odd'
+                        total_2_odd += 1
+                        break
+                    elif (row,col) in openings_reverted_1 and (row,col) in openings_reverted_2:
+                        print 'incrementing total 1 and total 2 odd'
+                        total_1 += 1
+                        total_2_odd += 1
+                        break
+                    elif (row,col) in openings_reverted_1:
+                        print 'incrementing total 1'
+                        total_1 += 1
+                        break
                 elif row%2 == 0 and (row,col) in openings_reverted_2:
-                    total -= 1
-                    
+                    print 'incrementing total 2 even'
+                    total_2_even += 1
                     break
                 row -= 1
             col += 1
+        if total_2_odd % 2 == 0 and total_2_odd > 0:
+            total = -1
+        elif total_1 > 0:
+            total = 1
+        elif total_2_even > 0:
+            total = -1
+        else:
+            total = 0 
         return total
 
     def check_four_alternate(self,player):
@@ -465,17 +495,20 @@ class Board(object):
         utility = surrounders_factor + threes_factor + center_score
         return utility
 
-    def utility_estimator_simpler(self,player1,player2,weights):
+    def utility_estimator_simpler(self,player1,player2,weights,toPrint=False):
         '''must be called in the right order, player1 being the player who goes first'''
         potential_fours_utility = weights[0]*(len(self.prune_total_possible_fours(player1,player2)) - len(self.prune_total_possible_fours(player2,player1)))
-        lowest_threes_utility = weights[1]*(self.num_of_controlling_open_threes(player1,player2))
+        end_utility = weights[1]*(self.control_end(player1,player2))
         center_score = 0
         for j in range(self.height):
             if self.arr[j][3] == player1:
                 center_score += 2
             elif self.arr[j][3] == player2:
                 center_score -= 2
-        return potential_fours_utility + lowest_threes_utility + center_score
+        if toPrint:
+            print 'end utility estimate ', end_utility
+            print 'potential fours utility ', potential_fours_utility
+        return potential_fours_utility + end_utility + center_score
   
 
     
