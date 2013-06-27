@@ -30,7 +30,7 @@ def minimum(player1,player2,board):
         if board.check_move_win(col,player2):
             forces.append(col)
     if len(forces) == 1:
-        print forces[0]
+        #print forces[0]
         return [forces[0]]
     elif len(forces) > 1:
         print 'minimum function fails to find a move to avoid defeat. must be checkmate'
@@ -92,8 +92,25 @@ def avoid_checkmate(player1,player2,board):
 
                 return l
 
-def look_for_two_move_checkmate(player1,player2,board):
-    
+def look_for_two_move_checkmate(player1,player2,board,l):
+    newboard = copy.deepcopy(board)
+    final_list = []
+    for move in l:
+        newboard.add_move(move,player1)
+        if newboard.accessible_open_threes(player1):
+            move2 = minimum(player2,player1,newboard)[0]
+            newboard.add_move(move2,player2)
+            if not newboard.check_four_alternate(player2):
+                if newboard.checkmate_moves(player1,player2) is not False:
+                    final_list.append(move)
+            newboard.remove_move(move2)
+        newboard.remove_move(move)
+    if len(final_list) > 0:
+        return final_list
+    return l
+
+
+
 
 def gos(player1,player2,board):
     '''if a player has stacked open threes in a column, it should move in that column to force the game. this function
@@ -283,6 +300,10 @@ def strat_basic(player1,player2,board, cutoff, show_decision=False):
         print 'past third  cut ', third_cut
     if cutoff == 3:
         return third_cut
+    third_cut_b = look_for_two_move_checkmate(player1,player2,board,third_cut)
+    if len(third_cut_b) > 0:
+        print 'move determined as a two moves ahead checkmate'
+        return third_cut_b
     fourth_cut = [item for item in third_cut if item in gos(player1,player2,board)]
     if len(fourth_cut) > 0:
         print 'move determined by gos function combined with avoid checkmate function'
