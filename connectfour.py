@@ -235,13 +235,20 @@ class Board(object):
         l1.sort()
         return l1
 
-    def stacked_open_threes(self,player):
+    def stacked_open_threes(self,player1,player2):
         '''gives a list of columns with stacked open threes'''
-        l = self.open_three_openings(player)
+        l = self.open_three_openings(player1)
+        l2 = self.open_three_openings(player2)
         stacks = []
         for i in range(len(l)-1):
+            ## same column, zeroth index (remember they're reversed), row index one different
             if l[i][0] == l[i+1][0] and l[i][1]+1 == l[i+1][1]:
-                stacks.append([l[i],l[i+1]])
+                not_a_valuable_stack = 0
+                for j in range((l[i][1]+1),5):
+                    if (l[i][0],j) in l2:
+                        not_a_valuable_stack += 1
+                if not_a_valuable_stack == 0:
+                    stacks.append([l[i],l[i+1]])
         return stacks
     def three_in_open_row(self,player):
         result = 0
