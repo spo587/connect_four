@@ -20,6 +20,8 @@ def minimum(player1,player2,board):
     # elif len(board.moves) == 2 and board.moves[1] == 3:
     #     return [2]
     # else:
+    if len(board.moves) == 0:
+        return [random.choice([2,3,4])]
     l = board.open_cols[:]
     forces = []
     for col in l:
@@ -466,7 +468,7 @@ def multiple_games_computer(num,strat1=strat_utility, strat2=strat_utility):
 
 #### changed!!!!
 if __name__ == '__main__':
-    #play_game_1_player_comp_leads((1,20,0))
+    play_game_1_player_comp_leads((1,20,0))
     play_game_1_player_human_leads((1,20,0))
     #comp_play_comp((1,20,0),(1,20,0))
     #print multiple_games_computer(4,8,16)

@@ -502,9 +502,9 @@ class Board(object):
         utility = surrounders_factor + threes_factor + center_score
         return utility
 
-    def utility_estimator_simpler_p1(self,player1,player2,weights,toPrint=False):
+    def utility_estimator_simpler_p1(self,player1,player2,weights,player2arg=False,toPrint=False):
         '''must be called in the right order, player1 being the player who goes first'''
-        if self.accessible_open_threes(player1):
+        if self.accessible_open_threes(player1) and not player2arg:
                 return 100
         potential_fours_utility = weights[0]*(len(self.prune_total_possible_fours(player1,player2)) - len(self.prune_total_possible_fours(player2,player1)))
         end_utility = weights[1]*(self.control_end(player1,player2))
@@ -520,9 +520,7 @@ class Board(object):
         return potential_fours_utility + end_utility + center_score
 
     def utility_estimator_simpler_p2(self,player2,player1,weights,toPrint=False):
-        if self.accessible_open_threes(player2):
-            return 100
-        return -self.utility_estimator_simpler_p1(player1,player2,weights,toPrint=False)
+        return -self.utility_estimator_simpler_p1(player1,player2,weights,player2arg=True,toPrint=False)
   
 
     
