@@ -89,7 +89,7 @@ class Board(object):
         return len(unique_squares) - 1
 
     def available_fours_at(self, index):
-        return [line for line in self.available_fours_no_columns if index in line]
+        return [line for line in self.available_fours_all if index in line]
 
     def available_fours_at_index_for_player(self,player,index):
         l = []
@@ -363,10 +363,10 @@ class Board(object):
                 l.append(col)
         return len(l)   ## will map to False if len(l) == 0
 
-    def gos(self,player):
+    def gos(self,player1,player2):
         '''if a player has stacked open threes in a column, it should move in that column to force the game. this function
         returns a list of columns with stacked open threes'''
-        l = [item[0][0] for item in self.stacked_open_threes(player)]
+        l = [item[0][0] for item in self.stacked_open_threes(player1,player2)]
         l2 = list(set(l))
         return l2
 
@@ -382,7 +382,7 @@ class Board(object):
         list_of_no_gos = []
         for move in l:
             newboard.add_move(move,player2)
-            if newboard.check_move_win(move,player1) is not False and move not in self.gos(player1) and newboard.moves_dict[move]%2==0:
+            if newboard.check_move_win(move,player1) is not False and move not in self.gos(player1,player2) and newboard.moves_dict[move]%2==0:
                 list_of_no_gos.append(move)
             newboard.remove_move(move)
         l2 = list(set(list_of_no_gos))
@@ -395,7 +395,7 @@ class Board(object):
         list_of_no_gos = []
         for move in l:
             newboard.add_move(move,player1)
-            if newboard.check_move_win(move,player2) is not False and move not in self.gos(player2) and newboard.moves_dict[move]%2==1:
+            if newboard.check_move_win(move,player2) is not False and move not in self.gos(player2,player1) and newboard.moves_dict[move]%2==1:
                 list_of_no_gos.append(move)
             newboard.remove_move(move)
         l2 = list(set(list_of_no_gos))
@@ -488,8 +488,8 @@ class Board(object):
             if (tup2[0]+4,tup2[1]) in u2:
                 open_rows_2 += 1
 
-        stacks1 = len(self.gos(player1))
-        stacks2 = len(self.gos(player2))
+        stacks1 = len(self.gos(player1,player2))
+        stacks2 = len(self.gos(player2,player1))
         no_gos_1 = len(self.no_gos(player1,player2))
         no_gos_2 = len(self.no_gos(player2,player1))
         ## weight the stacks higher than other open threes
@@ -504,6 +504,8 @@ class Board(object):
 
     def utility_estimator_simpler_p1(self,player1,player2,weights,toPrint=False):
         '''must be called in the right order, player1 being the player who goes first'''
+        if self.accessible_open_threes(player1):
+                return 100
         potential_fours_utility = weights[0]*(len(self.prune_total_possible_fours(player1,player2)) - len(self.prune_total_possible_fours(player2,player1)))
         end_utility = weights[1]*(self.control_end(player1,player2))
         center_score = 0
@@ -518,6 +520,8 @@ class Board(object):
         return potential_fours_utility + end_utility + center_score
 
     def utility_estimator_simpler_p2(self,player2,player1,weights,toPrint=False):
+        if self.accessible_open_threes(player2):
+            return 100
         return -self.utility_estimator_simpler_p1(player1,player2,weights,toPrint=False)
   
 

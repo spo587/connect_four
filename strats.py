@@ -92,10 +92,13 @@ def avoid_checkmate(player1,player2,board):
 
                 return l
 
+def look_for_two_move_checkmate(player1,player2,board):
+    
+
 def gos(player1,player2,board):
     '''if a player has stacked open threes in a column, it should move in that column to force the game. this function
     returns a list of columns with stacked open threes'''
-    l = [item[0][0] for item in board.stacked_open_threes(player1)]
+    l = [item[0][0] for item in board.stacked_open_threes(player1,player2)]
     l2 = list(set(l))
     return l2
 
@@ -118,13 +121,13 @@ def no_gos(player1,player2,board):
     return l
 
 def build_stacked_open_threes(player1,player2,board):
-    stacks1 = len(board.stacked_open_threes(player1))
+    stacks1 = len(board.stacked_open_threes(player1,player2))
     newboard = copy.deepcopy(board)
     l = newboard.open_cols[:]
     potential_moves = []
     for move in l:
         newboard.add_move(move,player1)
-        if len(newboard.stacked_open_threes(player1)) > stacks1 and newboard.stacked_open_threes(player1)[-1][1] not in newboard.open_three_openings(player2):
+        if len(newboard.stacked_open_threes(player1,player2)) > stacks1 and newboard.stacked_open_threes(player1,player2)[-1][1] not in newboard.open_three_openings(player2):
             potential_moves.append(move)
         newboard.remove_move(move)
     return potential_moves
@@ -132,20 +135,22 @@ def build_stacked_open_threes(player1,player2,board):
 
 
 def avoid_stacked_open_threes_opp(player1,player2,board):
-    stacks2 = len(board.stacked_open_threes(player2))
+    stacks2 = len(board.stacked_open_threes(player2,player1))
     newboard = copy.deepcopy(board)
     l = newboard.open_cols[:]
     potential_moves = board.open_cols[:]
     for move in l:
         newboard.add_move(move,player1)
-        #print newboard.open_cols
+        #pprint(newboard.arr)
         l2 = newboard.open_cols[:]
         for move2 in l2:
             #print move2
             newboard.add_move(move2,player2)
-            #print newboard.arr
-            if len(newboard.stacked_open_threes(player2)) > stacks2 and move in potential_moves and newboard.stacked_open_threes(player2)[-1][1] not in newboard.open_three_openings(player1):
+            #pprint(newboard.arr)
+            if len(newboard.stacked_open_threes(player2,player1)) > stacks2 and move in potential_moves and newboard.stacked_open_threes(player2,player1)[-1][1] not in newboard.open_three_openings(player1):
                 potential_moves.remove(move)
+                #print 'this move removed ', move
+                #print 'list of potential moves remaining ', potential_moves
             #print 'potential moves list', potential_moves
             newboard.remove_move(move2)
         newboard.remove_move(move)
