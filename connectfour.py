@@ -154,20 +154,20 @@ class Board(object):
             row = 4
             while row > -1:
                 if row%2 == 1:
-                    if (row,col) in openings_reverted_2 and (row,col) not in openings_reverted_1:
+                    if (row,col) in openings_reverted_2 and (row,col) not in openings_reverted_1 and self.arr[row+1][col] == 0:
                         #print 'incrementing total 2 odd'
                         total_2_odd += 1
                         break
-                    elif (row,col) in openings_reverted_1 and (row,col) in openings_reverted_2:
+                    elif (row,col) in openings_reverted_1 and (row,col) in openings_reverted_2 and self.arr[row+1][col] == 0:
                         #print 'incrementing total 1 and total 2 odd'
                         total_1 += 1
                         total_2_odd += 1
                         break
-                    elif (row,col) in openings_reverted_1:
+                    elif (row,col) in openings_reverted_1 and self.arr[row+1][col] == 0:
                         #print 'incrementing total 1'
                         total_1 += 1
                         break
-                elif row%2 == 0 and (row,col) in openings_reverted_2:
+                elif row%2 == 0 and (row,col) in openings_reverted_2 and self.arr[row+1][col] == 0:
                     #print 'incrementing total 2 even'
                     total_2_even += 1
                     break
@@ -176,9 +176,9 @@ class Board(object):
         if total_2_odd % 2 == 0 and total_2_odd > 0:
             total = -1
         elif total_1 > 0:
-            total = 1
+            total = total_1
         elif total_2_even > 0:
-            total = -1
+            total = -total_2_even
         else:
             total = 0 
         return total
