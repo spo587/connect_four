@@ -151,24 +151,24 @@ class Board(object):
         total_2_odd = 0
         col = 0
         while col < 7:
-            row = 5
+            row = 4
             while row > -1:
                 if row%2 == 1:
-                    if (row,col) in openings_reverted_2 and (row,col) not in openings_reverted_2:
-                        print 'incrementing total 2 odd'
+                    if (row,col) in openings_reverted_2 and (row,col) not in openings_reverted_1:
+                        #print 'incrementing total 2 odd'
                         total_2_odd += 1
                         break
                     elif (row,col) in openings_reverted_1 and (row,col) in openings_reverted_2:
-                        print 'incrementing total 1 and total 2 odd'
+                        #print 'incrementing total 1 and total 2 odd'
                         total_1 += 1
                         total_2_odd += 1
                         break
                     elif (row,col) in openings_reverted_1:
-                        print 'incrementing total 1'
+                        #print 'incrementing total 1'
                         total_1 += 1
                         break
                 elif row%2 == 0 and (row,col) in openings_reverted_2:
-                    print 'incrementing total 2 even'
+                    #print 'incrementing total 2 even'
                     total_2_even += 1
                     break
                 row -= 1
@@ -495,20 +495,23 @@ class Board(object):
         utility = surrounders_factor + threes_factor + center_score
         return utility
 
-    def utility_estimator_simpler(self,player1,player2,weights,toPrint=False):
+    def utility_estimator_simpler_p1(self,player1,player2,weights,toPrint=False):
         '''must be called in the right order, player1 being the player who goes first'''
         potential_fours_utility = weights[0]*(len(self.prune_total_possible_fours(player1,player2)) - len(self.prune_total_possible_fours(player2,player1)))
         end_utility = weights[1]*(self.control_end(player1,player2))
         center_score = 0
         for j in range(self.height):
             if self.arr[j][3] == player1:
-                center_score += 2
+                center_score += weights[2]
             elif self.arr[j][3] == player2:
-                center_score -= 2
+                center_score -= weights[2]
         if toPrint:
             print 'end utility estimate ', end_utility
             print 'potential fours utility ', potential_fours_utility
         return potential_fours_utility + end_utility + center_score
+
+    def utility_estimator_simpler_p2(self,player2,player1,weights,toPrint=False):
+        return -self.utility_estimator_simpler_p1(player1,player2,weights,toPrint=False)
   
 
     
