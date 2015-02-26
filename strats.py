@@ -354,6 +354,7 @@ def strat_basic(player1,player2,board, cutoff, show_decision=False):
 
     return eighth_cut
 
+
 def strat_utility(player1,player2,board,weights,show_decision=False):
     u1,u2,u3 = weights
     available_moves = strat_basic(player1,player2,board,show_decision=True)
@@ -410,19 +411,21 @@ def comp_play_comp(weights_team_1,weights_team_2,strat1=strat_utility_simpler,st
 
 def play_game_1_player_comp_leads(weights, strat=strat_utility_simpler, team1=1, team2=2, board=cf.Board(1,2)):
     for i in range(21):
-        print 'utility estimator for comp '
-        print board.utility_estimator_simpler_p1(team1,team2,weights,toPrint=True)
-        board.add_move(strat(team1,team2,board,weights,7),team1)
+        #print 'utility estimator for comp '
+        #print board.utility_estimator_simpler_p1(team1,team2,weights,toPrint=True)
+        k = cf.make_alphabeta_move(board,4,1,2)
+        board.add_move(k, team1)
+        print 'computers move ', k
         pprint(board.arr)
         if board.check_four_alternate(team1):
             print 'computer wins!!!!!'
             return
         elif board.accessible_open_threes(team1):
             print '###### CHECK #######'
-        print 'utility estimator for human '
-        print board.utility_estimator_simpler_p2(team2,team1,weights,toPrint=True)
-        print 'utility estimator for comp, should be - of above'
-        print board.utility_estimator_simpler_p1(team1,team2,weights,toPrint=True)
+        #print 'utility estimator for human '
+        #print board.utility_estimator_simpler_p2(team2,team1,weights,toPrint=True)
+        #print 'utility estimator for comp, should be - of above'
+        #print board.utility_estimator_simpler_p1(team1,team2,weights,toPrint=True)
         if not board.add_move(int(raw_input('team 1, your move, plz:  ')),team2):
             board.add_move(int(raw_input('team 1, your move, plz:  ')),team2)
         pprint(board.arr)
@@ -432,6 +435,9 @@ def play_game_1_player_comp_leads(weights, strat=strat_utility_simpler, team1=1,
         elif board.accessible_open_threes(team2):
             print '###### CHECK #######'
     print 'its a draw!!!!!'
+
+def minimax_strat(player1, player2, depth, board):
+    return cf.minimax(board, 0, player1, player2, depth)
 
 def play_game_1_player_human_leads(weights,strat=strat_utility_simpler,team1=1,team2=2):
     board=cf.Board(1,2)
@@ -445,8 +451,12 @@ def play_game_1_player_human_leads(weights,strat=strat_utility_simpler,team1=1,t
         elif board.accessible_open_threes(team1):
             print '###### CHECK #######'
         print 'utility estimator for human '
-        print board.utility_estimator_simpler_p1(team1,team2,weights,toPrint=True)
-        board.add_move(strat(team2,team1,board,weights,7),team2)
+        #print cf.utility_estimator_simpler_p1(team1,team2,weights,toPrint=True)
+        k = cf.make_alphabeta_move(board,4,2,1)
+        board.add_move(k, team2)
+        print 'computers move ', k
+        #board.add_move(minimax_strat(team2, team1, 4, board),team2)
+        #board.add_move(strat(team2,team1,board,weights,7),team2)
         pprint(board.arr)
         if board.check_four_alternate(team2):
             print 'computer wins!!!!!'
@@ -466,10 +476,12 @@ def multiple_games_computer(num,strat1=strat_utility, strat2=strat_utility):
         result += comp_play_comp(strat1, strat2)
     return result
 
+
+
 #### changed!!!!
 if __name__ == '__main__':
     play_game_1_player_comp_leads((1,20,0))
-    play_game_1_player_human_leads((1,20,0))
+    #play_game_1_player_human_leads((1,20,0))
     #comp_play_comp((1,20,0),(1,20,0))
     #print multiple_games_computer(4,8,16)
     #print which_strat_simulation(1)

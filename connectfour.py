@@ -2,6 +2,7 @@ import itertools
 import copy
 from collections import defaultdict
 from pprint import pprint
+import random
         
 '''this file contains the board class, whose methods will be called in the strategies file cf_strats_redone. you can also
 play a two-player, human vs. human game in this file.'''
@@ -59,6 +60,15 @@ class Board(object):
             return self.player2
         else:
             return self.player1
+
+    def numMoves(self):
+        total = 0
+        for i in range(len(self.arr)):
+            for j in range(len(self.arr[i])):
+                if self.arr[i][j] != 0:
+                    total += 1
+
+        return total
 
     def surrounders(self, player, index):
         '''key method to the surrounders strategy. checks branches in all directions for potential 4's in a row for the given player
@@ -216,8 +226,143 @@ class Board(object):
                 l.remove(item)
         return l
 
+    def threats(self,player):
+        '''returns a list of indices of only the OPEN entries in the open threes. l is a list, each element is a single tuple
+        and the tuple entry is column first, then row counting from top'''
+        l1 = []
+        l2 = self.check_open_three_nonvertical(player)
+        for l in l2:
+            for tup in l:
+                if self.arr[tup[0]][tup[1]] == 0:
+                    l1.append((tup[1],tup[0]))
+        l = []
+        for i in range(len(l1)-1):
+            for j in range(i+1,len(l1)):
+                if l1[i] == l1[j]:
+                    l.append(l1[i])
+        for tup in l:
+            if tup in l1:
+                l1.remove(tup)
+        l1.sort()
+        return l1
+
+
+    def foursUtility(self, player1, player2):
+        # print 'before blackout'
+        # pprint(self.arr)
+        self.blackout(player1, player2)
+        # print 'just blacked out'
+        # pprint(self.arr)
+        ## then check available fours
+        availableFoursMovingPlayer = self.check_total_possible_fours(player1)
+        self.unblackout()
+        # print 'just unblackedout'
+        # pprint(self.arr)
+        return len(availableFoursMovingPlayer)
+
+    def controlCol(self, col, player1, player2):
+        '''if player1 controls the column with the lowest threat in the column, the column number gets returned. else, returns nothing'''
+        threatsPlayer1 = self.threats(player1)
+        threatsPlayer2 = self.threats(player2)
+        threatColsPlayer1 = [tup[0] for tup in threatsPlayer1]
+        threatColsPlayer2 = [tup[0] for tup in threatsPlayer2]
+        # print threatColsPlayer1
+        # print threatColsPlayer2
+        # print col
+        if col in threatColsPlayer1:
+            if col in threatColsPlayer2:
+                # print threatsPlayer1[threatColsPlayer1.index(col)]
+                # print threatsPlayer2[threatColsPlayer2.index(col)]
+                threat1 = threatsPlayer1[threatColsPlayer1.index(col)][1]
+                threat2 = threatsPlayer2[threatColsPlayer2.index(col)][1]
+                if threat1 == max(threat1, threat2):
+                    return col
+            else:
+
+                return col
+
+    def numberColsControlled(self, player1, player2):
+        '''returns number of cols controlled by player1'''
+        total = 0
+        for col in range(7):
+            if self.controlCol(col, player1, player2):
+                total += 1
+
+        return total
+
+    def blackout(self, player1, player2):
+        '''blackout squares odd number above opponent's threats. TODO'''
+        for threat in self.threats(player2):
+            if threat[1] > 0:
+                #print threat
+                self.arr[threat[1] - 1][threat[0]] = 3
+
+    def unblackout(self):
+        for i in range(len(self.arr)):
+            for j in range(len(self.arr[i])):
+                if self.arr[i][j] == 3:
+                    self.arr[i][j] = 0
+
+    def usefulThreats(self, player1, player2):
+        self.blackout(player1, player2)
+        threats = self.threats(player1)
+        self.unblackout()
+
+    def oddControllingThreats(self, player1, player2):
+        oddThreats = []
+        for threat in self.threats(player1):
+            if self.controlCol(threat[0], player1, player2) and threat[1] % 2 == 1:
+                oddThreats.append(threat[0])
+        return list(set(oddThreats))
+
+    def evenControllingThreats(self, player1, player2):
+        evenThreats = []
+        for threat in self.threats(player1):
+            if self.controlCol(threat[0], player1, player2) and threat[1] % 2 == 0:
+                evenThreats.append(threat[0])
+        return list(set(evenThreats))
+
+    def numberEvenControllingThreats(self, player1, player2):
+        return len(self.evenControllingThreats(player1, player2))
+
+    def numberOddControllingThreats(self, player1, player2):
+        return len(self.oddControllingThreats(player1, player2))
+
+    def numberTotalControllingThreats(self, player1, player2):
+        return self.numberEvenControllingThreats(player1, player2) + self.numberOddControllingThreats(player1, player2)
+
+    def controlEnd(self, player1, player2):
+        '''for this function, the order matters. player1 has to be the player who moved first, unlike the other functions.
+        returns 1 if player1 controls, -1 if player2 controls'''
+        even = self.numberEvenControllingThreats(player2, player1)
+        odd = self.numberOddControllingThreats(player1, player2)
+        if odd >= even and odd > 0:
+            return 1
+        elif even > odd:
+            return -1
+        else:
+            return 0
+
+
+
+    # def controllingThreats(self, player1, player2):
+    #     threatsPlayer1 = self.threats(player1)
+    #     ## order by column
+    #     threatsPlayer1.sort()
+    #     threatsPlayer2 = self.threats(player2)
+    #     threatsPlayer2.sort()
+
+    #     ## proceed by column
+    #     for i in range(7):
+
+
+    #         for j in range(6):
+
+
+
     def open_three_openings(self,player):
-        '''returns a list of indices of only the OPEN entries in the open threes. l is a list, each element is a single tuple'''
+        '''returns a list of indices of only the OPEN entries in the open threes. l is a list, each element is a single tuple
+        and the tuple entry is column first, then row counting from top'''
         l1 = []
         l2 = self.check_open_three_nonvertical(player)
         for l in l2:
@@ -278,6 +423,7 @@ class Board(object):
                 self.arr[j][col] = 0
                 return value
     def check_total_possible_fours(self,player):
+        '''this returns tuple with row index first, counting from top'''
         total = []
         for row in range(self.height):
             for col in range(self.width):
@@ -287,6 +433,7 @@ class Board(object):
         #print l
         return l
     def prune_total_possible_fours(self,player1,player2):
+        '''prunes out possible fours that are above other players threats'''
         openings_reverted_2 = [(j,i) for (i,j) in self.open_three_openings(player2)]
         l1 = self.check_total_possible_fours(player1)[:]
         for list_of_tuples in self.check_total_possible_fours(player1):
@@ -316,8 +463,15 @@ class Board(object):
                     total += self.surrounders(player,(row,col))
         return total
 
+    def countThreats(self, player):
+        #if player == self.player1:
+        pass
+
+
+
     def add_move(self,col,player,toPrint=False):
         '''adds a move to the board for the given player in the given column'''
+        col = int(col)
         full_column = all([self.arr[row][col] for row in range(self.height)])
         if full_column:
             return False
@@ -458,8 +612,16 @@ class Board(object):
                 return move
         return False
 
+    def centerScore(self, player1, player2):
+        center_score = 0
+        for j in range(self.height):
+            if self.arr[j][3] == player1:
+                center_score += 1
+            elif self.arr[j][3] == player2:
+                center_score -= 1
+        return center_score
 
-    def utility_estimator(self,player1,player2,weight_center, weight_stacks,weight_open_rows,toPrint=False,weight_no_gos=5,change_factor=1/float(42)):
+    def utility_estimator(self,player1,player2,weight_center=1, weight_stacks=1,weight_open_rows=1,toPrint=False,weight_no_gos=5,change_factor=1/float(42)):
         '''the estimator of the utility of the board state for player1'''
         center_score = 0
         for j in range(self.height):
@@ -490,8 +652,8 @@ class Board(object):
 
         stacks1 = len(self.gos(player1,player2))
         stacks2 = len(self.gos(player2,player1))
-        no_gos_1 = len(self.no_gos(player1,player2))
-        no_gos_2 = len(self.no_gos(player2,player1))
+        no_gos_1 = len(self.no_gos_first_player(player1,player2))
+        no_gos_2 = len(self.no_gos_second_player(player2,player1))
         ## weight the stacks higher than other open threes
 
         threes_factor = len(u1) + weight_stacks*stacks1+weight_open_rows*open_rows_1 + weight_no_gos*no_gos_1 - (len(u2) + weight_stacks*stacks2+weight_center*open_rows_1 + weight_no_gos*no_gos_2)
@@ -527,20 +689,246 @@ class Board(object):
     
 def play_game_manual(player1=1, player2=2, board=Board(1,2)):
     for i in range(21):
+        pprint(board.arr)
         if not board.add_move(raw_input('player 1, your move, plz:  '),player1):
+            print 'okay'
             board.add_move(raw_input('player 1, your move, plz:  '),player1)
-        print board.arr
-        if board.check_four(player1):
+        pprint(board.arr)
+        if board.check_four_alternate(player1):
             return  
         if not board.add_move(raw_input('player 2, your move, plz:  '),player2):
             board.add_move(raw_input('player 2, your move, plz:  '),player2)
-        print board.arr
-        if board.check_four(player2):
+        pprint(board.arr)
+        if board.check_four_alternate(player2):
             return 
     print 'it\'s a draw!'
+
+
+def minimax(Board, depth, movingPlayer, otherPlayer): ## movesSequence=None, bestMove=None):
+
+
+    if Board.check_four_alternate(Board.player1):
+
+        return 100
+    elif Board.check_four_alternate(Board.player2):
+        return -100
+    elif depth == 0:  
+        return 0
+    if movingPlayer == Board.player1: 
+        bestVal = -100
+        moves = Board.open_cols[:]
+        for i in range(len(moves)):
+            move = moves[i]
+            Board.add_move(move, movingPlayer)
+            val = minimax(Board, depth - 1, Board.player2, Board.player1)
+            Board.remove_move(move)
+            bestVal = max(val, bestVal)
+
+        return bestVal
+    else:
+        movingPlayer = Board.player2
+        bestVal = 100
+        moves = Board.open_cols[:]
+        for i in range(len(moves)):
+            move = moves[i]
+            Board.add_move(move, movingPlayer)
+            #print 'new moves sequence ', newMoves
+            val = minimax(Board, depth - 1, Board.player1, Board.player2) #, maxDepth)
+            #val, newMoves = minimax(Board, depth + 1, Board.player1, Board.player2, maxDepth, newMoves)
+            Board.remove_move(move)
+            bestVal = min(val, bestVal)
+
+        return bestVal
+    
         
+    
+def alphabeta_dict(board, depth, movingPlayer, otherPlayer):
+    scores = defaultdict(int)
+    moves = board.open_cols[:]
+    for i in range(len(moves)):
+        move = moves[i]
+        #print move
+        #pprint(board.arr)
+        board.add_move(move, movingPlayer)
+        #pprint(board.arr)
+        scores[move] = alphabeta(board, depth, otherPlayer, movingPlayer)
+        #print move
+        board.remove_move(move)
+    return scores
+
+def make_alphabeta_move(board, depth, movingPlayer, otherPlayer):
+    if movingPlayer == board.player1:
+        return maxDict(alphabeta_dict(board, depth, movingPlayer, otherPlayer))
+
+    else:
+        return minDict(alphabeta_dict(board, depth, movingPlayer, otherPlayer))
+
+def maxDict(dictionary):
+    l = []
+    for k in dictionary:
+        if dictionary[k] == max(dictionary.values()):
+            l.append(k)
+    print l
+    return random.choice(l)
+
+def minDict(dictionary):
+    l = []
+    for k in dictionary:
+        if dictionary[k] == min(dictionary.values()):
+            l.append(k)
+    #print l
+    return random.choice(l)
+
+
+def alphabeta(Board, depth, movingPlayer, otherPlayer, alpha=1000, beta=1000):
+
+
+    #print 'depth ', depth
+    #print 'moving player ', movingPlayer
+    #pprint(Board.arr)
+    if Board.check_four_alternate(Board.player1): 
+        #print 'player 1 wins'
+        return 1000
+    elif Board.check_four_alternate(Board.player2):
+        #print 'player 2 wins'
+        return -1000
+    elif depth == 0:
+        #print 'returning from utility estimator '
+        #return 0
+        return utilityEstimator(Board, otherPlayer, movingPlayer)
+    if movingPlayer == Board.player1:
+        val = -1000
+        moves = Board.open_cols[:]
+        for i in range(len(moves)):
+            move = moves[i]
+            Board.add_move(move, movingPlayer)
+            val = max(val, alphabeta(Board, depth - 1, otherPlayer, movingPlayer, alpha, beta))
+            Board.remove_move(move)
+            alpha = max(alpha, val)
+            if beta < alpha:
+                break
+
+        return val
+    else:
+        #movingPlayer = Board.player2
+        val = 1000
+        moves = Board.open_cols[:]
+        for i in range(len(moves)):
+            move = moves[i]
+            Board.add_move(move, movingPlayer)
+            val = min(val,alphabeta(Board, depth - 1, otherPlayer, movingPlayer, alpha, beta))
+            Board.remove_move(move)
+            beta = min(beta, val)
+            if beta < alpha:
+                break
+
+        return val
+
+
+
+def utilityEstimator(board, movingPlayer, otherPlayer):
+    ## count number of moves on board
+    numMovesMade = board.numMoves()
+
+    ## stacks
+    stacksMovingPlayer = board.gos(movingPlayer, otherPlayer)
+    stacksOtherPlayer = board.gos(otherPlayer, movingPlayer)
+    stacksScore = len(stacksMovingPlayer) - len(stacksOtherPlayer)
+    if stacksScore != 0:
+        ## might have to change this, not all stacks are great
+        #print 'returning from stacks'
+        return stacksScore * 100
+
+    ## total threats
+    # totalThreatsMovingPlayer = board.countThreats(movingPlayer)
+    # totalThreatsOtherPlayer = board.countThreats(otherPlayer)
+
+    ## column control: count up threats that are lowest whatever column they're in, not counting lowest square
+    controllingThreatsMovingPlayer = board.numberTotalControllingThreats(movingPlayer,otherPlayer)
+    controllingThreatsOtherPlayer = board.numberTotalControllingThreats(otherPlayer,movingPlayer)
+    threatsScore = (controllingThreatsMovingPlayer - controllingThreatsOtherPlayer)
+    #print 'threatsScore ', threatsScore
+
+    ## end threats, controlling odd threats for player1, controlling even threats for player2
+    if movingPlayer == board.player1:
+        endUtility = board.controlEnd(movingPlayer, otherPlayer)
+    else:
+        endUtility = - board.controlEnd(otherPlayer, movingPlayer)
+    #print 'endUtility ', endUtility
+
+    centerUtility = board.centerScore(movingPlayer, otherPlayer)
+    # #print 'center utility ', centerUtility
+
+    # ## blackout squares just above an opponent's threats
+    foursUtilityMoving = board.foursUtility(movingPlayer, otherPlayer)
+    foursUtilityOther = board.foursUtility(otherPlayer, movingPlayer)
+    foursUtility = foursUtilityMoving - foursUtilityOther
+    # board.blackout(movingPlayer, otherPlayer)
+    # ## then check available fours
+    # availableFoursMovingPlayer = board.check_total_possible_fours(movingPlayer)
+    # availableFoursOtherPlayer = board.check_total_possible_fours(otherPlayer)
+    # foursUtility = len(availableFoursMovingPlayer) - len(availableFoursOtherPlayer)
+    # #print 'fours utility ', foursUtility
+    # board.unblackout()
+    if movingPlayer == board.player1:
+        ## surrounders
+        
+        #print stacks
+        #print 'final ', movingPlayer, (endUtility + foursUtility + centerUtility + threatsScore)
+        return (endUtility + centerUtility + foursUtility + threatsScore)
+
+    else:
+        #print 'final ', movingPlayer, - (endUtility + centerUtility + foursUtility + threatsScore)
+        return  -(endUtility + centerUtility + foursUtility + threatsScore)
+
+
+ 
+
         
 if __name__ == '__main__':
+    import connectfour as c
+    from pprint import pprint
+    b = c.Board(1,2)
+    b.add_move(1,2)
+    b.add_move(2,1)
+    b.add_move(3,1)
+    b.add_move(4,1)
+    b.add_move(5,2)
+    b.add_move(5,2)
+    b.add_move(5,1)
+    b.add_move(3,2)
+    b.add_move(3,1)
+    b.add_move(3,1)
+    b.add_move(4,2)
+    b.add_move(4,2)
+    b.add_move(4,1)
+    b.add_move(2,1)
+    b.add_move(2,2)
+    pprint(b.arr)
+    #c.minimax_dict(b,3,1,2)
+    b.add_move(0,1)
+    # c.minimax(b,3,2,1)
+    # c.alphabeta(b,3,-100,100,2)
+    #c.minimax_dict(b,2,2,1)
+    b.add_move(0,2)
+    pprint(b.arr)
+    # c.minimax(b,2,1,2)
+    # c.alphabeta(b,2,-100,100,1)
+    b.add_move(0,1)
+    pprint(b.arr)
+    # c.minimax(b,1,2,1)
+    # c.alphabeta(b,1,-100,100,2)
+    c.minimax(b,3,1,2)
+    c.alphabeta(b,3,1)
+
+
+
+    
+    c.minimax(b,0,b.player1,b.player2,1)
+    b = Board(1,0)
+    d = Board(1,2)
+    #alphabeta(b,2,-10000,10000,b.player1)
+    alphabeta(d,2,-10000,10000,d.player1)
     play_game_manual()
         
 
